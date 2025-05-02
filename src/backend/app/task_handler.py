@@ -26,6 +26,29 @@ async def task_tick():
     schedule.run_pending()
 
 
+async def send_notifications_task():
+    users_to_nofify = users.search(where("send_mail") == True)
+    dt = datetime.now(timezone.utc)
+    for db_user in users_to_nofify:
+        try:
+            user = shemas.User(**db_user)
+            send_time = datetime.strptime(user.send_time, "%Y-%m-%d %H:%M:%S%z")
+
+            if dt.weekday() == send_time.weekday and send_time.hour == dt.hour:
+                send_notification(
+                    user.email,
+                    text=render_notification_text(
+                        user.dw_playlist_id,
+                        user.user_id,
+                    ),
+                )
+        except Exception as e:
+            logger.exception(
+                f"Error while sending notification to {user.email}: {e}",
+                user_id=user.user_id,
+            )
+
+
 async def async_task_tick():
     while 1:
         schedule.run_pending()

@@ -34,7 +34,9 @@ def create_user(db, user: shemas.CreateUser) -> shemas.User:
 def update_user(
     db, user: shemas.UpdateUser, user_id: str
 ) -> shemas.User:  # TODO fix docs
-    if user_upd := {k: v for k, v in user.dict().items() if v is not None}:
+    if user_upd := {
+        k: v for k, v in user.model_dump().items() if v is not None
+    }:
         db.update(user_upd, where("user_id") == user_id)
         user_doc = db.get(where("user_id") == user_id)
         return shemas.User(**user_doc)

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 class RefreshToken(BaseModel):
@@ -36,7 +36,7 @@ class User(BaseUser):
     refresh_token: str
     save_time: Optional[str]
 
-    @validator("send_time", "save_time", "created_at", pre=True)
+    @field_validator("send_time", "save_time", "created_at", mode="before")
     def parse_birthdate(cls, value):
         if value:
             if isinstance(value, str):
@@ -67,7 +67,7 @@ class UpdateUser(BaseModel):
     save_full_playlist: bool | None = None
     filter_dislikes: bool | None = None
 
-    @validator("send_time", "save_time", pre=False)
+    @field_validator("send_time", "save_time", mode="after")
     def parse_date(cls, value):
         if value:
             return str(value)
