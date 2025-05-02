@@ -5,7 +5,7 @@ runs:
   using: "composite"
   steps:
     - name: Run playbook
-      uses: dawidd6/action-ansible-playbook@v2
+      uses: dawidd6/action-ansible-playbook@v3
       with:
         playbook: deploy.yml
         directory: deploy/${{ inputs.deploy_type }}

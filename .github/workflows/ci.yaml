@@ -116,7 +116,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run playbook
-        uses: dawidd6/action-ansible-playbook@v2
+        uses: dawidd6/action-ansible-playbook@v3
         with:
           playbook: deploy.yml
           directory: deploy/test
@@ -138,10 +138,10 @@ jobs:
             SPOTIPY_CLIENT_ID=${{ secrets.SPOTIPY_CLIENT_ID }}
             SPOTIPY_CLIENT_SECRET=${{ secrets.SPOTIPY_CLIENT_SECRET }}
             SPOTIPY_REDIRECT_URL=${{ vars.SPOTIPY_REDIRECT_URL }}
-            MAIL_USERNAME=${{ vars.MAIL_USERNAME }}
+            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
             MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
-            MAIL_FROM=${{ vars.MAIL_FROM }}
-            API_LOGIN=${{ vars.API_LOGIN }}
-            API_PASSWORD=${{ vars.API_PASSWORD }}
+            MAIL_FROM=${{ secrets.MAIL_FROM }}
+            API_LOGIN=${{ secrets.API_LOGIN }}
+            API_PASSWORD=${{ secrets.API_PASSWORD }}
             PORT=${{ vars.PORT }}
             "
