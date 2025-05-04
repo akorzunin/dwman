@@ -25,7 +25,9 @@
   },
   "python.linting.enabled": false,
   "python.testing.pytestArgs": [
-    "tests"
+    "tests",
+    "--color=yes",
+    "-vv",
   ],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true

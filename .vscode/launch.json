@@ -1,4 +1,5 @@
 {
+  "version": "0.2.0",
   "configurations": [
     {
       "name": "Python: Fast API",
@@ -39,6 +40,15 @@
         ],
         "projectType": "fastapi"
       }
+    },
+    {
+      "name": "Python: Debug Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "purpose": ["debug-test"],
+      "console": "integratedTerminal",
+      // "justMyCode": false,
     }
   ]
 }
