@@ -3,7 +3,7 @@
 import asyncio
 import os
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 import structlog
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -95,22 +95,15 @@ if __name__ == "__main__":
     )
     loop.create_task(uvicorn.Server(config).serve())
 
-    # Launch tasks
     scheduler = AsyncIOScheduler(event_loop=loop)
-    # scheduler.add_job(
-    #     task_tick,
-    #     trigger="interval",
-    #     seconds=3600,
-    #     name="task_tick",
-    # )
+    dt = datetime.now(timezone.utc)
     scheduler.add_job(
         send_notifications_task,
         trigger="interval",
-        minutes=31,
+        start_date=dt.replace(hour=dt.hour + 1, minute=0, second=0),
+        hours=1,
         name="send_notifications",
-        next_run_time=datetime.now(timezone.utc) + timedelta(seconds=1),
     )
-    # revive_user_tasks()
     scheduler.start()
 
     loop.run_forever()

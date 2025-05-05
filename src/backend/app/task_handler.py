@@ -34,7 +34,7 @@ async def send_notifications_task(time_overrides: dict | None = None):
     if time_overrides:
         curr_weekday = time_overrides["weekday"]
         curr_hour = time_overrides["hour"]
-        # curr_minute = time_overrides["minute"]
+        curr_minute = time_overrides["minute"]
     users_to_nofify = users.search(where("send_mail") == True)
     notified_users = []
     for db_user in users_to_nofify:

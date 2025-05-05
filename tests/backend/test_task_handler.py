@@ -40,6 +40,7 @@ async def test_send_notifications_task(setup_user: shemas.User):
     time_overrides = {
         "weekday": 6,
         "hour": 14,  # UTC
+        "minute": 45,
     }
     res = await send_notifications_task(time_overrides)
     assert res["total_users"] == 1
