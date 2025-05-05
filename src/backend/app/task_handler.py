@@ -26,27 +26,45 @@ async def task_tick():
     schedule.run_pending()
 
 
-async def send_notifications_task():
-    users_to_nofify = users.search(where("send_mail") == True)
+async def send_notifications_task(time_overrides: dict | None = None):
     dt = datetime.now(timezone.utc)
+    curr_weekday = dt.weekday()
+    curr_hour = dt.hour
+    curr_minute = dt.minute
+    if time_overrides:
+        curr_weekday = time_overrides["weekday"]
+        curr_hour = time_overrides["hour"]
+        # curr_minute = time_overrides["minute"]
+    users_to_nofify = users.search(where("send_mail") == True)
+    notified_users = []
     for db_user in users_to_nofify:
         try:
             user = shemas.User(**db_user)
             send_time = datetime.strptime(user.send_time, "%Y-%m-%d %H:%M:%S%z")
 
-            if dt.weekday() == send_time.weekday and send_time.hour == dt.hour:
-                send_notification(
+            if (
+                curr_weekday == send_time.weekday()
+                and curr_hour == send_time.hour
+            ):
+                await send_notification(
                     user.email,
                     text=render_notification_text(
                         user.dw_playlist_id,
                         user.user_id,
                     ),
                 )
+                notified_users.append(user.user_id)
         except Exception as e:
             logger.exception(
                 f"Error while sending notification to {user.email}: {e}",
                 user_id=user.user_id,
             )
+    return {
+        "total_users": len(users_to_nofify),
+        "notified_users": notified_users,
+        "date": f"{dt.weekday()} {dt.hour:0>2.0f}:{dt.minute:0>2.0f}",
+        "curr_date": f"{curr_weekday} {curr_hour:0>2.0f}:{curr_minute:0>2.0f}",
+    }
 
 
 async def async_task_tick():
@@ -201,22 +219,22 @@ def user_notify_task(user: shemas.NotifyUser) -> schedule.Job:
 ### ACTUAL TASKS ###
 
 
-def send_notification(email: str, text: str):
+async def send_notification(email: str, text: str):
     subject = "Save Discover Weekly Playlist"
     logger.info(
         f"Sending notification to {email} at {datetime.now(timezone.utc)}"
     )
-    asyncio.gather(send_email(email, subject, text))
+    await send_email(email, subject, text)
 
 
-def save_dw(user: shemas.SavePlUser):
+async def save_dw(user: shemas.SavePlUser):
     #  get sp somehow
     user_data = get_access_token(user.refresh_token)
     token = user_data["access_token"]
     sp = spotipy.Spotify(auth=token)
     # TODO: figure out why i didnt call this function
     # sp.user_playlist_create
-    asyncio.gather(save_playlist_algorithm(sp, user))
+    await save_playlist_algorithm(sp, user)
 
     if user.send_mail:
         # TODO add separate filed to form and shema to send mails on pl save
@@ -225,4 +243,4 @@ def save_dw(user: shemas.SavePlUser):
         logger.info(
             f"Sending save_dw mail to {user.email} at {datetime.now(timezone.utc)}"
         )
-        asyncio.gather(send_email(user.email, subject, text))
+        await send_email(user.email, subject, text)

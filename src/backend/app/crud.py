@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from tinydb import where
+from tinydb import TinyDB, where
 
 from backend.app import shemas
 
@@ -24,16 +24,20 @@ def get_user_by_email(db, email: str):
 
 def create_user(db, user: shemas.CreateUser) -> shemas.User:
     if not db.get(where("user_id") == user.user_id):
-        new_user = user.dict() | {"created_at": datetime.now(timezone.utc)}
+        new_user = user.model_dump() | {
+            "created_at": datetime.now(timezone.utc)
+        }
         parced_user = shemas.User(**new_user)
-        db.insert(parced_user.dict())
+        db.insert(parced_user.model_dump())
         return parced_user
     raise ValueError("Could not create new user")
 
 
 def update_user(
-    db, user: shemas.UpdateUser, user_id: str
-) -> shemas.User:  # TODO fix docs
+    db: TinyDB,
+    user: shemas.UpdateUser,
+    user_id: str,
+) -> shemas.User:
     if user_upd := {
         k: v for k, v in user.model_dump().items() if v is not None
     }:

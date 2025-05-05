@@ -17,6 +17,7 @@ smtp_conf = ConnectionConfig(
     MAIL_SSL_TLS=False,
     USE_CREDENTIALS=True,
     VALIDATE_CERTS=True,
+    SUPPRESS_SEND=int(os.getenv("MAIL_DRY_RUN", 1)),
 )
 
 

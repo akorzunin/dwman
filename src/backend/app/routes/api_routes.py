@@ -1,4 +1,5 @@
 import asyncio
+from typing import Literal
 
 import structlog
 from backend.app import crud, shemas
@@ -8,6 +9,7 @@ from backend.app.mail_handle import render_notification_text, send_email
 from backend.app.task_handler import (
     manage_user_tasks,
     send_notification,
+    send_notifications_task,
 )
 from backend.app.utils import get_access_token
 from fastapi import APIRouter, Depends, status
@@ -161,3 +163,21 @@ async def delete_user(
         status_code=status.HTTP_202_ACCEPTED,
         content={"message": "User does not exists"},
     )
+
+
+@router.post("/force_notifications_task")
+async def force_notifications_task(
+    weekday: Literal["0", "1", "2", "3", "4", "5", "6"] | None = None,
+    hour: int | None = None,
+):
+    """Send notifications task"""
+    time_overrides = {}
+    if weekday is not None and hour is not None:
+        time_overrides["weekday"] = int(weekday)
+        time_overrides["hour"] = hour
+        # time_overrides["minute"] = minute
+    res = await send_notifications_task(time_overrides)
+    return {
+        "message": "ok",
+        **res,
+    }

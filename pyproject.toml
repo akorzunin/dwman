@@ -35,6 +35,7 @@ ipykernel = "^6.23.3"
 [tool.poetry.group.test.dependencies]
 pytest = "^8.3.3"
 pytest-asyncio = "^0.26.0"
+pytest-env = "^1.1.5"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -74,3 +75,7 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 asyncio_mode="auto"
 asyncio_default_fixture_loop_scope="function"
+
+[tool.pytest_env]
+TZ = "UTC"
+MAIL_DRY_RUN = "1"
