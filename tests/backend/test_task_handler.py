@@ -1,11 +1,11 @@
 from unittest import mock
 
 import pytest
-from backend.app import shemas
-from backend.app.crud import create_user
 from tinydb import TinyDB
 from tinydb.storages import MemoryStorage
 
+from backend.app import shemas
+from backend.app.crud import create_user
 from src.backend.app.task_handler import send_notifications_task
 
 

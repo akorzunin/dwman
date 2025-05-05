@@ -7,14 +7,6 @@ from datetime import datetime, timedelta, timezone
 
 import structlog
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from backend.app.auth import check_credentials, security
-from backend.app.logger import setup_logging, setup_uvicorn_logging
-from backend.app.routes.api_routes import router as api_routes
-from backend.app.routes.front_routes import router as front_routes
-from backend.app.routes.proxy_routes import router as proxy_routes
-from backend.app.task_handler import (
-    send_notifications_task,
-)
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -23,6 +15,15 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
 from starlette.staticfiles import StaticFiles
+
+from backend.app.auth import check_credentials, security
+from backend.app.logger import setup_logging, setup_uvicorn_logging
+from backend.app.routes.api_routes import router as api_routes
+from backend.app.routes.front_routes import router as front_routes
+from backend.app.routes.proxy_routes import router as proxy_routes
+from backend.app.task_handler import (
+    send_notifications_task,
+)
 
 IGNORE_CORS = bool(eval(os.getenv("IGNORE_CORS", "False")))
 

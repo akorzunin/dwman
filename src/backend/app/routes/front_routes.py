@@ -7,13 +7,14 @@ from urllib.parse import urlencode
 import requests
 import spotipy
 import structlog  # type: ignore
-from configs.scope import scope_str
 from fastapi import APIRouter, Request, status
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 ### pydantic
 from pydantic import BaseModel
+
+from configs.scope import scope_str
 
 logger = structlog.stdlib.get_logger(__name__)
 

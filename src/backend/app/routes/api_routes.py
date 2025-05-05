@@ -2,6 +2,10 @@ import asyncio
 from typing import Literal
 
 import structlog
+from fastapi import APIRouter, Depends, status
+from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBasicCredentials
+
 from backend.app import crud, shemas
 from backend.app.auth import check_credentials, security
 from backend.app.db_connector import users
@@ -12,9 +16,6 @@ from backend.app.task_handler import (
     send_notifications_task,
 )
 from backend.app.utils import get_access_token
-from fastapi import APIRouter, Depends, status
-from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBasicCredentials
 
 router = APIRouter(
     prefix="/api",
