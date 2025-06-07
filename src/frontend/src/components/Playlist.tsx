@@ -16,6 +16,7 @@ const Playlist: FC<IPlayList> = ({ title, songs, isDW, className }) => {
   return (
     <div className={cn('flex w-full flex-col gap-y-3', className)}>
       <PlaylistTitle title={'Playlist: ' + title} isDW={isDW} />
+      <div className="hidden laptop:block laptop:h-9"></div>
       <div className="flex max-h-[70vh] flex-col gap-y-2 overflow-y-scroll">
         {songs.length > 0 ? (
           songs.map((song: Song, index: number) => (

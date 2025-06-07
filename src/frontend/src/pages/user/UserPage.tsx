@@ -49,17 +49,15 @@ export const UserPage: FC = () => {
   });
 
   return (
-    <div className="flex items-center justify-center p-2">
-      <div className="flex w-[448px] flex-col items-center gap-y-3">
-        <Playlist
-          title={PlaylistName}
-          songs={PlSongs}
-          isDW={isDW}
-          className={cn(PlSongs.length === 0 && 'hidden')}
-        />
-        <SavePlaylist />
-        <SettingsPanelV2 />
-      </div>
+    <div className="mx-auto flex w-[448px] flex-col gap-y-3 laptop:w-full laptop:flex-row laptop:gap-x-3">
+      <Playlist
+        title={PlaylistName}
+        songs={PlSongs}
+        isDW={isDW}
+        className={cn(PlSongs.length === 0 && 'hidden')}
+      />
+      <SavePlaylist />
+      <SettingsPanelV2 />
     </div>
   );
 };
