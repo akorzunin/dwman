@@ -8,7 +8,9 @@ on:
 jobs:
   deploy-prod:
     runs-on: ubuntu-22.04
-    environment: prod
+    environment:
+      name: prod
+      url: https://dwman.akorz-sw1.duckdns.org
     defaults:
       run:
         working-directory: deploy/prod

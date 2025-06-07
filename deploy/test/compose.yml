@@ -1,6 +1,6 @@
 services:
   dwman:
-    image: akorzunin/dwman:test
+    image: akorzunin/dwman:${IMAGE_TAG}
     container_name: dwman-test
     ports:
       - ${PORT:-8000}:8000
