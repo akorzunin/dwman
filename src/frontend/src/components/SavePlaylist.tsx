@@ -70,7 +70,7 @@ const SavePlaylist = ({ className }: { className?: string }) => {
           <div className="relative inline-flex">
             <Button
               variant="secondary"
-              className=" rounded-none rounded-l-md"
+              className="rounded-none rounded-l-md"
               onClick={async () => saveUserPlaylist()}
             >
               {savePlState}
@@ -121,7 +121,7 @@ const SavePlaylist = ({ className }: { className?: string }) => {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <Button variant="third" onClick={onClear}>
+          <Button variant="secondary" onClick={onClear}>
             Clear
           </Button>
           <Button

@@ -3,39 +3,31 @@ import { Song } from '../interfaces/Song';
 import { cn } from '../lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../shadcn/ui/avatar';
 import { useAtom } from 'jotai';
-import { deleteSongSetAtom, SongSetAtom } from '../store/store';
-import { Plus, X } from 'lucide-react';
+import { listenPlaybackAtom, SongSetAtom } from '../store/store';
+import { Ear, EarOff, Plus } from 'lucide-react';
+import { Button } from '../shadcn/ui/button';
 
 interface ISongCard {
   song: Song;
-  index: number;
   isDeletable?: boolean;
   isHidden?: boolean;
   isAddable?: boolean;
   className?: string;
 }
 
-const SongCard: FC<ISongCard> = ({
-  song,
-  index,
-  isDeletable,
-  isHidden,
-  isAddable,
-  className,
-}) => {
-  const [, deleteSong] = useAtom(deleteSongSetAtom);
+const SongCard: FC<ISongCard> = ({ song, isHidden, isAddable, className }) => {
   const [, addSong] = useAtom(SongSetAtom);
+  const [listenPlayback, setListenPlayback] = useAtom(listenPlaybackAtom);
 
   return (
     <div
       className={cn(
-        'flex items-center justify-between rounded-md border-2 border-solid p-2 text-primary-foreground',
+        'items-center justify-between rounded-md border-2 border-solid px-4 py-2 text-primary-foreground tablet:flex tablet:w-[320px] desktop:w-[380px]',
         isHidden && 'hidden',
         className
       )}
     >
       <div className="flex w-[85%] flex-shrink items-center gap-x-3">
-        <div className="flex">{Number.isNaN(index) ? '' : index}</div>
         <Avatar className="-z-10 h-[64px] w-[64px] rounded-none">
           <AvatarImage src={song.imgUrl} className="h-full" alt="song cover" />
           <AvatarFallback className="rounded-none">NA</AvatarFallback>
@@ -47,25 +39,28 @@ const SongCard: FC<ISongCard> = ({
           </p>
         </div>
       </div>
-      <div className="flex gap-x-3">
-        <button
-          className={cn(
-            'hover:pointer cursor-pointer rounded-md border-2 border-solid p-1 transition hover:border-transparent hover:bg-destructive',
-            !isDeletable && 'hidden'
-          )}
-          onClick={() => isDeletable && deleteSong(song)}
-        >
-          <X />
-        </button>
-        <button
-          className={cn(
-            'hover:pointer cursor-pointer rounded-md border-2 border-solid p-1 transition hover:border-transparent hover:bg-third',
-            !isAddable && 'hidden'
-          )}
+      <div className="flex">
+        <Button
+          variant="secondary"
+          className="rounded-none rounded-l-md px-2"
           onClick={() => isAddable && addSong(song)}
         >
           <Plus />
-        </button>
+        </Button>
+        <Button
+          variant="secondary"
+          className={cn(
+            'rounded-none rounded-r-md border-l-2 px-2 transition-none',
+            !listenPlayback && 'bg-secondary/60'
+          )}
+          onClick={() => setListenPlayback(!listenPlayback)}
+        >
+          {listenPlayback ? (
+            <Ear className="h-4 w-4" />
+          ) : (
+            <EarOff className="h-4 w-4" />
+          )}
+        </Button>
       </div>
     </div>
   );

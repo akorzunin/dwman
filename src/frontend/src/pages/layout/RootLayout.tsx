@@ -5,9 +5,9 @@ import { ModeToggle } from '../../shadcn/ui/theme-toggle';
 import { OpenAPI } from '../../api/client';
 import UserCard from '../../components/UserCard';
 import { useAtomValue } from 'jotai';
-import SongCard from '../../components/SongCard';
 import { CurrentSongAtom } from '../../store/store';
 import BurgerMenu from '../../components/menu/BurgerMenu';
+import HeaderSongCard from '../../components/HeaderSongCard';
 
 export function RootLayout() {
   const { userId } = useParams();
@@ -19,12 +19,7 @@ export function RootLayout() {
         {userId ? (
           <div className="flex w-full items-center justify-between">
             <UserCard />
-            <SongCard
-              className="hidden tablet:flex tablet:w-[320px] desktop:w-[380px]"
-              song={CurrentSong}
-              index={NaN}
-              isAddable={true}
-            />
+            <HeaderSongCard song={CurrentSong} isAddable={true} />
             <div className="gap-x-3 desktop:hidden">
               <BurgerMenu userId={userId} />
             </div>
