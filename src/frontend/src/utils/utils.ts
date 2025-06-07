@@ -1,6 +1,5 @@
 /// <reference types="vite/client" />
 
-import { MouseEvent } from 'react';
 import { OpenAPI } from '../api/client';
 
 const text_emojis = [
@@ -22,12 +21,6 @@ const text_emojis = [
 
 export const get_text_emoji = (): string => {
   return text_emojis[Math.floor(Math.random() * text_emojis.length)];
-};
-
-export const updateTextEmoji = (event: MouseEvent<HTMLElement>): void => {
-  if (event.target instanceof Element) {
-    event.target.textContent = get_text_emoji();
-  }
 };
 
 export const getSpotifyUrl = (path: string, isDirect: boolean): string => {
