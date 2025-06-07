@@ -14,16 +14,19 @@ const SaveSongPlaylist: FC = () => {
     setKey(self.crypto.randomUUID());
   };
   return (
-    <div className="flex max-h-[70vh] flex-col-reverse gap-y-2 overflow-y-scroll">
+    <div className="flex max-h-[70vh] flex-col gap-y-2 overflow-y-scroll">
       {songs.items.length > 0 ? (
-        songs.items.map((song: Song, index: number) => (
-          <SongCard
-            key={index}
-            song={song}
-            index={index + 1}
-            isDeletable={true}
-          />
-        ))
+        songs.items
+          .slice(0)
+          .reverse()
+          .map((song: Song, index: number) => (
+            <SongCard
+              key={index}
+              song={song}
+              index={songs.items.length - index}
+              isDeletable={true}
+            />
+          ))
       ) : (
         <div className="opacity-50">
           <SongCard song={emptySong} index={0} isDeletable={false} />

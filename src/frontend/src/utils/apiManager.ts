@@ -256,56 +256,64 @@ export const saveUserPl = async (songs: Song[]) => {
   // Create new playlist
   const userData = await getUserData();
   const PlData = await generatePlData();
-  if (userData) {
-    const token = await getAccessToken();
-    const res = await fetch(
-      getSpotifyUrl(`/v1/users/${userData.id}/playlists`, false),
-      {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: PlData.name,
-          description: PlData.description,
-          public: true,
-        }),
-      }
-    );
-    if (checkStatusCode(res)) {
-      const resData = (await res.json()) as SpotifyApi.CreatePlaylistResponse;
-      // wait some time before spotify create playlist
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      // add songs to playlist
-      const token = await getAccessToken();
-      const plRes = await fetch(
-        getSpotifyUrl(`/v1/playlists/${resData.id}/tracks`, false),
-        {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            uris: songs.map((x) => x.id),
-          }),
-        }
-      );
-      if (!checkStatusCode(plRes)) {
-        return false;
-      }
-      const data =
-        (await plRes.json()) as SpotifyApi.AddTracksToPlaylistResponse;
-      console.info('Created', data);
-      // const updatedRes = await updatePlaylistDescription(resData);
-      // return updatedRes;
-      return true;
-    }
+  if (!userData.id) {
+    return false;
   }
-  return false;
+  const token = await getAccessToken();
+  const res = await fetch(
+    getSpotifyUrl(`/v1/users/${userData.id}/playlists`, false),
+    {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        name: PlData.name,
+        description: PlData.description,
+        public: true,
+      }),
+    }
+  );
+  if (!checkStatusCode(res)) {
+    return false;
+  }
+  if (songs.length === 0) {
+    return true;
+  }
+  const resData = (await res.json()) as SpotifyApi.CreatePlaylistResponse;
+  // wait some time before spotify create playlist
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  // add songs to playlist
+  const plRes = await fetch(
+    getSpotifyUrl(`/v1/playlists/${resData.id}/tracks`, false),
+    {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        uris: songs.map((x) => {
+          if (x.id) {
+            return x.id;
+          } else {
+            return x.uri;
+          }
+        }),
+      }),
+    }
+  );
+  if (!checkStatusCode(plRes)) {
+    return false;
+  }
+  const data = (await plRes.json()) as SpotifyApi.AddTracksToPlaylistResponse;
+  console.info('Created', data);
+  // const updatedRes = await updatePlaylistDescription(resData);
+  // return updatedRes;
+  return true;
 };
 
 export const updatePlaylistDescription = async (

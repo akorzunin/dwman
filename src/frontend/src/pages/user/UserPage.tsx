@@ -1,13 +1,14 @@
 import { useState, FC } from 'react';
 import * as apiManager from '../../utils/apiManager';
 import SavePlaylist from '../../components/SavePlaylist';
-import { emptySong, Song } from '../../interfaces/Song';
+import { emptySong } from '../../interfaces/Song';
 import Playlist from '../../components/Playlist';
 import { useQuery } from '@tanstack/react-query';
 import { useAtom, useAtomValue } from 'jotai';
 import {
   CurrentSongAtom,
   listenPlaybackAtom,
+  PlaylistSongsAtom,
   SongSetAtom,
 } from '../../store/store';
 import { cn } from '../../lib/utils';
@@ -15,7 +16,7 @@ import { SpotifyApi } from '../../api/SpotifyApi';
 import { SettingsPanelV2 } from '../../components/settings/SettingsPanelV2';
 
 export const UserPage: FC = () => {
-  const [PlSongs, setPlSongs] = useState<Song[]>([emptySong]);
+  const [PlSongs, setPlSongs] = useAtom(PlaylistSongsAtom);
   const [isDW, setIsDW] = useState(false);
   const [PlaylistName, setPlaylistName] = useState('No playlist name');
   const [, setCurrentSong] = useAtom(CurrentSongAtom);
@@ -49,15 +50,15 @@ export const UserPage: FC = () => {
   });
 
   return (
-    <div className="mx-auto flex w-[448px] flex-col gap-y-3 laptop:w-full laptop:flex-row laptop:gap-x-3">
+    <div className="flex w-[448px] flex-col justify-center gap-y-3 laptop:w-full laptop:flex-row laptop:gap-x-3">
       <Playlist
         title={PlaylistName}
         songs={PlSongs}
         isDW={isDW}
         className={cn(PlSongs.length === 0 && 'hidden')}
       />
-      <SavePlaylist />
-      <SettingsPanelV2 />
+      <SavePlaylist className="max-w-[448px]" />
+      <SettingsPanelV2 className="max-w-[448px]" />
     </div>
   );
 };

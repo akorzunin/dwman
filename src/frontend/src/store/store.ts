@@ -8,8 +8,9 @@ export const easterEggCountAtom = atom(0);
 
 export const listenPlaybackAtom = atomWithStorage('listen_playback', true);
 export const CurrentSongAtom = atom<Song>(emptySong);
+export const PlaylistSongsAtom = atom<Song[]>([emptySong]);
 
-export const _SongSetAtom = atom<SongSet>(new SongSet());
+const _SongSetAtom = atom<SongSet>(new SongSet());
 export const SongSetAtom = atom(
   (get) => {
     return get(_SongSetAtom);

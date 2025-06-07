@@ -35,7 +35,7 @@ const SongCard: FC<ISongCard> = ({
     >
       <div className="flex w-[85%] flex-shrink items-center gap-x-3">
         <div className="flex">{Number.isNaN(index) ? '' : index}</div>
-        <Avatar className="h-[64px] w-[64px] rounded-none">
+        <Avatar className="-z-10 h-[64px] w-[64px] rounded-none">
           <AvatarImage src={song.imgUrl} className="h-full" alt="song cover" />
           <AvatarFallback className="rounded-none">NA</AvatarFallback>
         </Avatar>
