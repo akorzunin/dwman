@@ -7,6 +7,7 @@ import { getSpotifyUrl } from './utils';
 import { getAccessToken } from './auth';
 import { OpenAPI } from '../api/client';
 import { getTimeData } from './timeMangment';
+import dayjs from 'dayjs';
 
 const checkStatusCode = (res: Response) => {
   const logErr = (res: Response) => {
@@ -231,10 +232,43 @@ export const getPlayBackSongs = async (
   ];
   return [songs, false, currentSong];
 };
+
+const renderTemplate = (
+  template: string,
+  ctx?: { songs: Song[]; kaomoji?: string } | undefined
+) => {
+  return template.replace(/{([^{}]+)}/g, (_, key) => {
+    const d = dayjs();
+    switch (key) {
+      case 'year':
+        return String(getTimeData().fullYear);
+      case 'month':
+        return String(d.month() + 1);
+      case 'day':
+        return String(d.date());
+      case 'week':
+        return String(getTimeData().weekNumber);
+      case 'created':
+        return String(d.format('YYYY-MM-DD HH:mm:ss'));
+      case '<3':
+        return '❤️';
+      case 'kaomoji':
+        return ctx?.kaomoji || '';
+      case 'songs_num':
+        return String(ctx?.songs?.length);
+      case 'repo_url':
+        return 'https://github.com/akorzunin/dwman';
+      default:
+        return '';
+    }
+  });
+};
+
 export const generatePlData = async (
   name?: string,
   description?: string,
-  date = getTimeData()
+  date = getTimeData(),
+  ctx?: { songs: Song[]; kaomoji?: string }
 ) => {
   const plData: { name: string; description: string } = {
     name: '',
@@ -242,20 +276,36 @@ export const generatePlData = async (
   };
   if (!name) {
     plData.name = `${date.fullYear}_${date.weekNumber}`;
+  } else {
+    plData.name = renderTemplate(name, ctx);
   }
   if (!description) {
     // replace regular space w/ U+205F cause of bug
     plData.description =
-      `Creation date: ${date.currentTime}. This playlist was created by web service. Link to github repo /akorzunin/Spotify_save_DW`
+      `Created at: ${date.currentTime}. This playlist was created by dwman (https://github.com/akorzunin/dwman)`
         .split(' ')
         .join(' ');
+  } else {
+    plData.description = renderTemplate(description, ctx).split(' ').join(' ');
   }
   return plData;
 };
-export const saveUserPl = async (songs: Song[]) => {
+
+export interface SavePlOptions {
+  playlistName?: string;
+  playlistDescription?: string;
+  kaomoji?: string;
+}
+
+export const saveUserPl = async (songs: Song[], opts?: SavePlOptions) => {
   // Create new playlist
   const userData = await getUserData();
-  const PlData = await generatePlData();
+  const PlData = await generatePlData(
+    opts?.playlistName,
+    opts?.playlistDescription,
+    getTimeData(),
+    { songs: songs, kaomoji: opts?.kaomoji }
+  );
   if (!userData.id) {
     return false;
   }
@@ -311,29 +361,5 @@ export const saveUserPl = async (songs: Song[]) => {
   }
   const data = (await plRes.json()) as SpotifyApi.AddTracksToPlaylistResponse;
   console.info('Created', data);
-  // const updatedRes = await updatePlaylistDescription(resData);
-  // return updatedRes;
   return true;
-};
-
-export const updatePlaylistDescription = async (
-  plData: SpotifyApi.CreatePlaylistResponse
-) => {
-  const playtlistDetails = await generatePlData();
-  const token = await getAccessToken();
-  const res = await fetch(getSpotifyUrl(`/v1/playlists/${plData.id}`, false), {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      description: playtlistDetails.description,
-    }),
-  });
-  if (!checkStatusCode(res)) {
-    return false;
-  }
-  return res;
 };

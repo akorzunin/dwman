@@ -3,12 +3,21 @@ import { emptySong, Song } from '../interfaces/Song';
 import { SongSet } from '../utils/songSet';
 import { User } from '../api/client';
 import { atomWithStorage } from 'jotai/utils';
+import { get_text_emoji } from '../utils/utils';
 
 export const easterEggCountAtom = atom(0);
 
 export const listenPlaybackAtom = atomWithStorage('listen_playback', true);
 export const CurrentSongAtom = atom<Song>(emptySong);
 export const PlaylistSongsAtom = atom<Song[]>([emptySong]);
+export const PlaylistNameTemplateAtom = atomWithStorage<string>(
+  'playlist_name_template',
+  ''
+);
+export const PlaylistDescriptionTemplateAtom = atomWithStorage<string>(
+  'playlist_description_template',
+  ''
+);
 
 const _SongSetAtom = atom<SongSet>(new SongSet());
 export const SongSetAtom = atom(
@@ -35,3 +44,5 @@ export const UserDataAtom = atom<User>({
   refresh_token: '',
   created_at: '',
 });
+
+export const easterEggKaomojiAtom = atom(get_text_emoji());

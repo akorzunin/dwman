@@ -6,7 +6,10 @@ import { Button } from '../shadcn/ui/button';
 import { useAtom, useAtomValue } from 'jotai';
 import {
   clrearSongSetAtom,
+  easterEggKaomojiAtom,
   listenPlaybackAtom,
+  PlaylistDescriptionTemplateAtom,
+  PlaylistNameTemplateAtom,
   PlaylistSongsAtom,
 } from '../store/store';
 import { fullYear, weekNumber } from '../utils/timeMangment';
@@ -30,6 +33,9 @@ const SavePlaylist = ({ className }: { className?: string }) => {
 
   const [, clrearSongSet] = useAtom(clrearSongSetAtom);
   const PlaylistSongs = useAtomValue(PlaylistSongsAtom);
+  const playlistName = useAtomValue(PlaylistNameTemplateAtom);
+  const playlistDescription = useAtomValue(PlaylistDescriptionTemplateAtom);
+  const easterEggKaomoji = useAtomValue(easterEggKaomojiAtom);
 
   const onClear = () => {
     setPingState('hidden');
@@ -43,10 +49,15 @@ const SavePlaylist = ({ className }: { className?: string }) => {
   }) => {
     setSavePlState('Saving...');
     let ok = false;
+    const PlData = {
+      playlistName,
+      playlistDescription,
+      kaomoji: easterEggKaomoji,
+    };
     if (opts?.full) {
-      ok = await saveUserPl(PlaylistSongs);
+      ok = await saveUserPl(PlaylistSongs, PlData);
     } else if (opts?.empty) {
-      ok = await saveUserPl([]);
+      ok = await saveUserPl([], PlData);
     }
     if (ok) {
       setPingState('hidden');
