@@ -1,4 +1,5 @@
 import { FC } from 'react';
+import Silk from '../bg/Silk';
 
 interface IBlobButton {
   title: string;
@@ -15,6 +16,13 @@ const BlobButton: FC<IBlobButton> = ({ title = 'Blob', link = '/' }) => {
       >
         {title}
       </a>
+      <Silk
+        speed={5}
+        scale={1}
+        color="#7B7481"
+        noiseIntensity={1.5}
+        rotation={0}
+      />
     </div>
   );
 };
