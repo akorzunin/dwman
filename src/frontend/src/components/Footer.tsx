@@ -9,7 +9,7 @@ interface IFooter {
 
 const Footer: FC<IFooter> = ({ className }) => {
   return (
-    <footer className={cn('', className)}>
+    <footer className={cn('fixed inset-x-0 bottom-0 laptop:static', className)}>
       <div className="border-b border-primary p-0.5" />
       <div className="flex justify-end gap-4 px-4 py-4">
         <div className="flex gap-3">

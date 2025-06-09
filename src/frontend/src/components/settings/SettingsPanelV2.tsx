@@ -12,6 +12,7 @@ export const SettingsPanelV2 = ({ className }: { className?: string }) => {
       <SettingsTitle />
       <AccountStatus IsPremium={userData.is_premium} />
       <SettingsForm />
+      <div className="h-28 laptop:h-0"></div>
     </div>
   );
 };

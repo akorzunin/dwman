@@ -14,7 +14,7 @@ export function RootLayout() {
   const CurrentSong = useAtomValue(CurrentSongAtom);
 
   return (
-    <div className="container relative flex h-screen flex-col justify-between">
+    <div className="container relative flex h-screen flex-col laptop:justify-between">
       <header className="flex p-4">
         {userId ? (
           <div className="flex w-full items-center justify-between">

@@ -50,12 +50,12 @@ export const UserPage: FC = () => {
   });
 
   return (
-    <div className="flex w-[448px] flex-col justify-center gap-y-3 laptop:w-full laptop:flex-row laptop:gap-x-3">
+    <div className="mx-auto flex h-[70vh] w-[448px] flex-col gap-y-3 laptop:w-full laptop:flex-row laptop:justify-center laptop:gap-x-3">
       <Playlist
         title={PlaylistName}
         songs={PlSongs}
         isDW={isDW}
-        className={cn(PlSongs.length === 0 && 'hidden')}
+        className={cn('', PlSongs.length === 0 && 'hidden')}
       />
       <SavePlaylist className="max-w-[448px]" />
       <SettingsPanelV2 className="max-w-[448px]" />
