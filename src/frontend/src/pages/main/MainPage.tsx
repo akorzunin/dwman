@@ -2,10 +2,11 @@
 
 import { FC } from 'react';
 
-import BlobButton from '../../components/buttons/blob-button/BlobButton';
+// import BlobButton from '../../components/buttons/blob-button/BlobButton';
 import * as cookieHandle from '../../utils/cookieHandle';
 import { useQuery } from '@tanstack/react-query';
 import { OpenAPI } from '../../api/client';
+import BlobButtonV2 from '../../components/buttons/BlobButtonV2';
 
 export const MainPage: FC = () => {
   // getUserQuery
@@ -22,8 +23,11 @@ export const MainPage: FC = () => {
   });
 
   return (
-    <div className="flex items-center justify-center">
-      <BlobButton title="Save DW" link={userPath || `${OpenAPI.BASE}/login`} />
+    <div className="flex h-[70vh] items-center justify-center">
+      <BlobButtonV2
+        title="Save DW"
+        link={userPath || `${OpenAPI.BASE}/login`}
+      />
     </div>
   );
 };
