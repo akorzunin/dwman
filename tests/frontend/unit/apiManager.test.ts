@@ -17,6 +17,7 @@ const testWithTime = test.extend({
     use(getTimeData(dayjs("1970-01-01").toDate()));
   },
   mockDate: async ({}, use) => {
+    vi.stubEnv("TZ", "UTC");
     vi.useFakeTimers();
     vi.setSystemTime(dayjs("1970-01-01").toDate());
     await use(dayjs("1970-01-01").toDate());
@@ -51,7 +52,7 @@ testWithTime("generatePlData empty", async ({ mockDate }: TestTime) => {
 
   expect(plData.name).toBe("1970_1");
   expect(plData.description).toBe(
-    "Created at: 1969-12-31T21:00:00.000Z. This playlist was created by dwman (https://github.com/akorzunin/dwman)",
+    "Created at: 1970-01-01T00:00:00.000Z. This playlist was created by dwman (https://github.com/akorzunin/dwman)",
   );
 });
 
