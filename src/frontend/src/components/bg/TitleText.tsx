@@ -20,7 +20,7 @@ const TitleText: FC<TitleTextProps> = ({ title }) => {
       position={[Math.cos(theta) * radius, Math.sin(theta) * radius + 0.2, 0]}
       transform
     >
-      <div className="text-xl font-bold text-primary-foreground transition-all duration-100 hover:cursor-pointer">
+      <div className="text-xl font-bold text-white transition-all duration-100 hover:cursor-pointer">
         {title}
       </div>
     </Html>
