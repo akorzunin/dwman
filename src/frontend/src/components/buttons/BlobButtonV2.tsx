@@ -8,21 +8,17 @@ interface IBlobButton {
 
 const BlobButton: FC<IBlobButton> = ({ title = 'Blob', link = '/' }) => {
   return (
-    <div className="relative">
-      <a
-        href={link}
-        className="bg-opacity-0 text-xl font-bold text-primary-foreground transition-opacity hover:opacity-80"
-        tabIndex={0}
-      >
-        {title}
+    <div className="rounded-full">
+      <a href={link} tabIndex={0}>
+        <Silk
+          speed={5}
+          scale={1}
+          color="#7B7481"
+          noiseIntensity={1.5}
+          rotation={0}
+          title={title}
+        />
       </a>
-      <Silk
-        speed={5}
-        scale={1}
-        color="#7B7481"
-        noiseIntensity={1.5}
-        rotation={0}
-      />
     </div>
   );
 };

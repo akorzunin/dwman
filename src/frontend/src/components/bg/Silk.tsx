@@ -5,6 +5,7 @@ import { Color, Mesh, ShaderMaterial } from 'three';
 import { IUniform } from 'three';
 import vertexShader from './silk.vert';
 import fragmentShader from './silk.frag';
+import TitleText from './TitleText';
 
 type NormalizedRGB = [number, number, number];
 
@@ -76,6 +77,7 @@ export interface SilkProps {
   color?: string;
   noiseIntensity?: number;
   rotation?: number;
+  title: string;
 }
 
 const Silk: React.FC<SilkProps> = ({
@@ -84,6 +86,7 @@ const Silk: React.FC<SilkProps> = ({
   color = '#7B7481',
   noiseIntensity = 1.5,
   rotation = 0,
+  title = 'Save DW',
 }) => {
   const meshRef = useRef<Mesh>(null);
 
@@ -99,10 +102,19 @@ const Silk: React.FC<SilkProps> = ({
     [speed, scale, noiseIntensity, color, rotation]
   );
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   return (
-    <Canvas dpr={[1, 2]} frameloop="always">
-      <SilkPlane ref={meshRef} uniforms={uniforms} />
-    </Canvas>
+    <div
+      ref={containerRef}
+      className="relative h-[300px] w-[300px] overflow-hidden rounded-full"
+    >
+      {/** Container for absolute positioning */}
+      <Canvas dpr={[1, 2]} frameloop="always">
+        <TitleText title={title} />
+        <SilkPlane ref={meshRef} uniforms={uniforms} />
+      </Canvas>
+    </div>
   );
 };
 
