@@ -1,66 +1,45 @@
 /// <reference types="vite-plugin-glsl/ext" />
-import React, { forwardRef, useMemo, useRef, useLayoutEffect } from 'react';
-import { Canvas, useFrame, useThree, RootState } from '@react-three/fiber';
-import { Color, Mesh, ShaderMaterial } from 'three';
-import { IUniform } from 'three';
+import { useMemo, useRef } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Color } from 'three';
+import TitleText from './TitleText';
+import { ThemeValues, useTheme } from '../../shadcn/ui/theme-provider';
+
 import vertexShader from './silk.vert';
 import fragmentShader from './silk.frag';
-import TitleText from './TitleText';
 
-type NormalizedRGB = [number, number, number];
-
-const hexToNormalizedRGB = (hex: string): NormalizedRGB => {
-  const clean = hex.replace('#', '');
-  const r = parseInt(clean.slice(0, 2), 16) / 255;
-  const g = parseInt(clean.slice(2, 4), 16) / 255;
-  const b = parseInt(clean.slice(4, 6), 16) / 255;
-  return [r, g, b];
+const colorMap: Record<ThemeValues, Color> = {
+  light: new Color('rgb(125, 211, 252)'),
+  dark: new Color('rgb(2, 132, 199)'),
+  system: new Color('rgb(14, 165, 233)'),
+  'office-light': new Color('rgb(125, 211, 252)'),
+  'office-dark': new Color('rgb(2, 132, 199)'),
+  'pepega-green': new Color('green'),
+  'rose-pine': new Color('purple'),
 };
 
-interface UniformValue<T = number | Color> {
-  value: T;
-}
+function SilkPlane() {
+  const ref = useRef();
+  const th = useTheme();
 
-interface SilkUniforms {
-  uSpeed: UniformValue<number>;
-  uScale: UniformValue<number>;
-  uNoiseIntensity: UniformValue<number>;
-  uColor: UniformValue<Color>;
-  uRotation: UniformValue<number>;
-  uTime: UniformValue<number>;
-  [uniform: string]: IUniform;
-}
-
-interface SilkPlaneProps {
-  uniforms: SilkUniforms;
-}
-
-const SilkPlane = forwardRef<Mesh, SilkPlaneProps>(function SilkPlane(
-  { uniforms },
-  ref
-) {
-  const { viewport } = useThree();
-
-  useLayoutEffect(() => {
-    const mesh = ref as React.MutableRefObject<Mesh | null>;
-    if (mesh.current) {
-      mesh.current.scale.set(viewport.width, viewport.height, 1);
-    }
-  }, [ref, viewport]);
-
-  useFrame((_state: RootState, delta: number) => {
-    const mesh = ref as React.MutableRefObject<Mesh | null>;
-    if (mesh.current) {
-      const material = mesh.current.material as ShaderMaterial & {
-        uniforms: SilkUniforms;
-      };
-      material.uniforms.uTime.value += 0.1 * delta;
-    }
+  const uniforms = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uColor: { value: colorMap[th.theme] },
+    }),
+    []
+  );
+  useFrame((state) => {
+    const { clock } = state;
+    if (!ref.current) return;
+    // @ts-expect-error ts(2339)
+    const u = ref.current.material.uniforms;
+    u.uTime.value = clock.getElapsedTime();
+    u.uColor.value = colorMap[th.theme];
   });
-
   return (
     <mesh ref={ref}>
-      <planeGeometry args={[1, 1, 1, 1]} />
+      <planeGeometry args={[8, 8]} />
       <shaderMaterial
         uniforms={uniforms}
         vertexShader={vertexShader}
@@ -68,51 +47,14 @@ const SilkPlane = forwardRef<Mesh, SilkPlaneProps>(function SilkPlane(
       />
     </mesh>
   );
-});
-SilkPlane.displayName = 'SilkPlane';
-
-export interface SilkProps {
-  speed?: number;
-  scale?: number;
-  color?: string;
-  noiseIntensity?: number;
-  rotation?: number;
-  title: string;
 }
 
-const Silk: React.FC<SilkProps> = ({
-  speed = 5,
-  scale = 1,
-  color = '#7B7481',
-  noiseIntensity = 1.5,
-  rotation = 0,
-  title = 'Save DW',
-}) => {
-  const meshRef = useRef<Mesh>(null);
-
-  const uniforms = useMemo<SilkUniforms>(
-    () => ({
-      uSpeed: { value: speed },
-      uScale: { value: scale },
-      uNoiseIntensity: { value: noiseIntensity },
-      uColor: { value: new Color(...hexToNormalizedRGB(color)) },
-      uRotation: { value: rotation },
-      uTime: { value: 0 },
-    }),
-    [speed, scale, noiseIntensity, color, rotation]
-  );
-
-  const containerRef = useRef<HTMLDivElement>(null);
-
+const Silk = () => {
   return (
-    <div
-      ref={containerRef}
-      className="relative h-[300px] w-[300px] overflow-hidden rounded-full"
-    >
-      {/** Container for absolute positioning */}
-      <Canvas dpr={[1, 2]} frameloop="always">
-        <TitleText title={title} />
-        <SilkPlane ref={meshRef} uniforms={uniforms} />
+    <div className="h-[300px] w-[300px] overflow-hidden rounded-full">
+      <Canvas>
+        <TitleText />
+        <SilkPlane />
       </Canvas>
     </div>
   );

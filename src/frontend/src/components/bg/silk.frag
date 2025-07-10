@@ -1,10 +1,6 @@
-
 uniform float uTime;
 uniform vec3 uColor;
-uniform float uSpeed;
-uniform float uScale;
-uniform float uRotation;
-uniform float uNoiseIntensity;
+
 varying vec2 vUv;
 varying vec3 vPosition;
 
@@ -24,9 +20,13 @@ vec2 rotateUvs(vec2 uv, float angle) {
 }
 
 void main() {
+    float uSpeed = .5;
+    float uNoiseIntensity = 2.;
+    float uRotation = .5;
+
     float rnd = noise(gl_FragCoord.xy);
-    vec2 uv = rotateUvs(vUv * uScale, uRotation);
-    vec2 tex = uv * uScale;
+    vec2 uv = rotateUvs(vUv, uRotation);
+    vec2 tex = uv;
     float tOffset = uSpeed * uTime;
 
     tex.y += 0.03 * sin(8.0 * tex.x - tOffset);
@@ -37,7 +37,6 @@ void main() {
         0.02 * tOffset) +
         sin(20.0 * (tex.x + tex.y - 0.1 * tOffset)));
 
-    vec4 col = vec4(uColor, 1.0) * vec4(pattern) - rnd / 15.0 * uNoiseIntensity;
-    col.a = 1.0;
-    gl_FragColor = col;
+    vec3 col = vec3(uColor) * vec3(pattern) - rnd / 15.0 * uNoiseIntensity;
+    gl_FragColor = vec4(col, 1.0);
 }

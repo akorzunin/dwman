@@ -1,12 +1,8 @@
-import { FC, useState } from 'react';
+import { useState } from 'react';
 import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 
-interface TitleTextProps {
-  title: string;
-}
-
-const TitleText: FC<TitleTextProps> = ({ title }) => {
+const TitleText = () => {
   const [theta, setTheta] = useState(0);
   const radius = 0.1;
   const speed = 0.01;
@@ -21,7 +17,7 @@ const TitleText: FC<TitleTextProps> = ({ title }) => {
       transform
     >
       <div className="text-xl font-bold text-white transition-all duration-100 hover:cursor-pointer">
-        {title}
+        Save DW
       </div>
     </Html>
   );
