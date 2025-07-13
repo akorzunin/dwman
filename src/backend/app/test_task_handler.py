@@ -6,6 +6,7 @@ from tinydb.storages import MemoryStorage
 
 from backend.app import shemas
 from backend.app.crud import create_user
+from backend.settings import TG_LIVE_TEST, TG_LIVE_TEST_CHAT_ID
 from src.backend.app.task_handler import send_notifications_task
 
 
@@ -31,6 +32,7 @@ def setup_user(mock_user_table):
             send_time="1973-01-07 14:00:00+00:00",
             is_premium=False,
             refresh_token="test_refresh_token",
+            tg_chat_id=TG_LIVE_TEST_CHAT_ID if TG_LIVE_TEST else "123123123",
         ),
     )
 
@@ -42,7 +44,11 @@ async def test_send_notifications_task(setup_user: shemas.User):
         "hour": 14,  # UTC
         "minute": 45,
     }
-    res = await send_notifications_task(time_overrides)
+    if TG_LIVE_TEST:
+        res = await send_notifications_task(time_overrides)
+    else:
+        with mock.patch("requests.post"):
+            res = await send_notifications_task(time_overrides)
     assert res["total_users"] == 1
     assert res["notified_users"] == [setup_user.user_id]
     weekday, time = res["curr_date"].split(" ")

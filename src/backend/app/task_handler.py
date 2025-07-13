@@ -11,13 +11,14 @@ from tinydb import where
 
 from backend.app import shemas
 from backend.app.db_connector import users
-from backend.app.dw_save_algoritm import save_playlist_algorithm
+from backend.app.dw_save_algoritm import get_pl_name, save_playlist_algorithm
 from backend.app.mail_handle import (
     render_notification_text,
     render_save_pl_text,
     send_email,
 )
 from backend.app.utils import get_access_token
+from backend.notifications.tg import send_telegram_notification
 
 logger = structlog.stdlib.get_logger(__name__)
 
@@ -46,13 +47,7 @@ async def send_notifications_task(time_overrides: dict | None = None):
                 curr_weekday == send_time.weekday()
                 and curr_hour == send_time.hour
             ):
-                await send_notification(
-                    user.email,
-                    text=render_notification_text(
-                        user.dw_playlist_id,
-                        user.user_id,
-                    ),
-                )
+                await send_notification(user)
                 notified_users.append(user.user_id)
         except Exception as e:
             logger.exception(
@@ -219,12 +214,29 @@ def user_notify_task(user: shemas.NotifyUser) -> schedule.Job:
 ### ACTUAL TASKS ###
 
 
-async def send_notification(email: str, text: str):
-    subject = "Save Discover Weekly Playlist"
+async def send_notification(user: shemas.User):
     logger.info(
-        f"Sending notification to {email} at {datetime.now(timezone.utc)}"
+        f"Sending notification to {user.email} at {datetime.now(timezone.utc)}"
     )
-    await send_email(email, subject, text)
+    err = send_telegram_notification(
+        user.tg_chat_id,
+        f"""
+Save Discover Weekly Playlist {get_pl_name(user.user_id)}
+
+dwman: https://dwman.akorz-sw1.duckdns.org/
+playlist link: https://open.spotify.com/playlist/{user.dw_playlist_id}
+""",
+    )
+    if err is not None:
+        logger.error(err)
+    await send_email(
+        user.email,
+        "Save Discover Weekly Playlist",
+        render_notification_text(
+            user.dw_playlist_id,
+            user.user_id,
+        ),
+    )
 
 
 async def save_dw(user: shemas.SavePlUser):

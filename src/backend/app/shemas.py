@@ -35,6 +35,7 @@ class User(BaseUser):
     is_premium: bool
     refresh_token: str
     save_time: Optional[str]
+    tg_chat_id: str | None = None
 
     @field_validator("send_time", "save_time", "created_at", mode="before")
     def parse_birthdate(cls, value):
@@ -53,6 +54,7 @@ class CreateUser(BaseUser):
     is_premium: bool
     refresh_token: str
     save_time: datetime | None = None
+    tg_chat_id: str | None = None
 
 
 class UpdateUser(BaseModel):
