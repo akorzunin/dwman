@@ -12,32 +12,26 @@ RUN pnpm run build
 FROM python:3.11-slim AS runner
 
 ENV PYTHONFAULTHANDLER=1 \
-    PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONHASHSEED=random \
-    PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
-    PIP_DEFAULT_TIMEOUT=100 \
-    POETRY_VERSION=1.8.4
+    PIP_NO_CACHE_DIR=off
+
+COPY --from=ghcr.io/astral-sh/uv:0.9.3 /uv /uvx /bin/
 
 WORKDIR /app
-# NOTE: poetry not work on linux/arm/v7
-# Install dependencies
-RUN if [ "$TARGETPLATFORM" != "linux/arm/v7" ] ; then pip install "poetry==$POETRY_VERSION" ; fi
-# Copy only dependencies file to cache them in docker layer
-COPY poetry.lock pyproject.toml /app/
-COPY requirements.txt /app/
 
-RUN if [ "$TARGETPLATFORM" != "linux/arm/v7" ] ; then poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi --no-dev; else pip install -r /app/requirements.txt; fi
+RUN --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-cache
 
 # Creating folders, and files for a project:
-COPY ["src/main.py", "./src/main.py"]
-COPY ["src/backend", "./src/backend"]
-COPY ["src/configs", "./src/configs"]
-COPY ["src/frontend/templates", "./src/frontend/templates"]
+COPY ["src/main.py", "./main.py"]
+COPY ["src/backend", "./backend"]
+COPY ["src/configs", "./configs"]
+COPY ["src/frontend/templates", "./frontend/templates"]
 COPY --from=frontend ["/frontend/dist", "./src/frontend/dist"]
 
 EXPOSE 8000
 
-CMD ["python", "/app/src/main.py"]
+
+CMD ["uv", "run", "main.py"]

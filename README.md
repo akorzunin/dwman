@@ -28,13 +28,13 @@ Test server: <https://test-dwman.akorz-sw1.duckdns.org/>
 
 ### Backend
 
-Need python 3.10+, poetry 1.5+, caddy
+Need python 3.11+, uv, caddy
 
 ```sh
 git clone ...
-poetry shell
-poetry install
 cp .env.example .env
+task build-web
+uv run src/main.py
 ```
 
 - setup .env values

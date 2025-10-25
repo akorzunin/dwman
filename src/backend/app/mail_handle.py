@@ -1,24 +1,23 @@
-import os
+# import os
 
 from dotenv import load_dotenv
-from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
 from jinja2 import Template
 
 load_dotenv()
 
-smtp_conf = ConnectionConfig(
-    MAIL_USERNAME=os.environ["MAIL_USERNAME"],
-    MAIL_PASSWORD=os.environ["MAIL_PASSWORD"],
-    MAIL_FROM=os.environ["MAIL_FROM"],
-    MAIL_FROM_NAME="savespotifydw",
-    MAIL_SERVER=os.environ["MAIL_SERVER"],
-    MAIL_PORT=int(os.environ["MAIL_PORT"]),
-    MAIL_STARTTLS=True,
-    MAIL_SSL_TLS=False,
-    USE_CREDENTIALS=True,
-    VALIDATE_CERTS=True,
-    SUPPRESS_SEND=int(os.getenv("MAIL_DRY_RUN", 1)),
-)
+# smtp_conf = ConnectionConfig(
+#     MAIL_USERNAME=os.environ["MAIL_USERNAME"],
+#     MAIL_PASSWORD=os.environ["MAIL_PASSWORD"],
+#     MAIL_FROM=os.environ["MAIL_FROM"],
+#     MAIL_FROM_NAME="savespotifydw",
+#     MAIL_SERVER=os.environ["MAIL_SERVER"],
+#     MAIL_PORT=int(os.environ["MAIL_PORT"]),
+#     MAIL_STARTTLS=True,
+#     MAIL_SSL_TLS=False,
+#     USE_CREDENTIALS=True,
+#     VALIDATE_CERTS=True,
+#     SUPPRESS_SEND=int(os.getenv("MAIL_DRY_RUN", 1)),
+# )
 
 
 def render_template(template_filename, context):
@@ -28,14 +27,7 @@ def render_template(template_filename, context):
 
 
 async def send_email(email: str, subject: str, mail_text: str):
-    message = MessageSchema(
-        subject=subject,
-        recipients=[email],
-        body=mail_text,
-        subtype="html",
-    )
-    fm = FastMail(smtp_conf)
-    await fm.send_message(message)
+    print(mail_text)
 
 
 def render_notification_text(dw_link, user_id):
