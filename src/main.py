@@ -4,6 +4,9 @@ import asyncio
 import os
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
 
 import structlog
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -93,7 +96,7 @@ if __name__ == "__main__":
         port=int(os.getenv("UVICORN_PORT", "8000")),
         loop=loop,
     )
-    loop.create_task(uvicorn.Server(config).serve())
+    _ = loop.create_task(uvicorn.Server(config).serve())
 
     scheduler = AsyncIOScheduler(event_loop=loop)
     dt = datetime.now(timezone.utc)

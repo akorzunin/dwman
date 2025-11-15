@@ -37,7 +37,6 @@ test = [
 [tool.uv]
 package = false
 default-groups = [
-    "dev",
     "test",
 ]
 

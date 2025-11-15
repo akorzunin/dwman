@@ -6,6 +6,10 @@ tasks:
   caddy-dev:
     desc: Run Caddy server with dev configuration
     cmds:
+      - echo "###"
+      - echo "RUNNING on web ui on https://test-dwman.localhost"
+      - echo "RUNNING on web ui on https://api.test-dwman.localhost"
+      - echo "###"
       - caddy run --config ./caddy/dev/Caddyfile --adapter caddyfile
 
   caddy-frontend-dev:
@@ -64,7 +68,7 @@ tasks:
     env:
       LOG_LEVEL: ERROR
     cmds:
-      - poetry run uvicorn run:app --reload --log-level error --no-access-log
+      - uv run python -m uvicorn src.main:app --reload --log-level error --no-access-log
 
   debug-full:
     aliases:
