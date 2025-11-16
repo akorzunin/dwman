@@ -11,6 +11,7 @@ import {
   PlaylistDescriptionTemplateAtom,
   PlaylistNameTemplateAtom,
   PlaylistSongsAtom,
+  SongSetAtom,
 } from '../store/store';
 import { fullYear, weekNumber } from '../utils/timeMangment';
 import { cn } from '../lib/utils';
@@ -21,6 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@radix-ui/react-dropdown-menu';
+import { Song } from '../interfaces/Song';
 
 const dotClassName =
   'absolute right-[-6px] top-[-6px] inline-flex h-3 w-3 bg-purple-700';
@@ -33,6 +35,8 @@ const SavePlaylist = ({ className }: { className?: string }) => {
 
   const [, clrearSongSet] = useAtom(clrearSongSetAtom);
   const PlaylistSongs = useAtomValue(PlaylistSongsAtom);
+  const currentSongs = useAtomValue(SongSetAtom);
+
   const playlistName = useAtomValue(PlaylistNameTemplateAtom);
   const playlistDescription = useAtomValue(PlaylistDescriptionTemplateAtom);
   const easterEggKaomoji = useAtomValue(easterEggKaomojiAtom);
@@ -42,32 +46,44 @@ const SavePlaylist = ({ className }: { className?: string }) => {
     setSavePlState('Save');
     clrearSongSet();
   };
-
-  const saveUserPlaylist = async (opts?: {
-    full?: boolean;
-    empty?: boolean;
-  }) => {
+  type Opts = { full?: boolean; empty?: boolean };
+  const saveUserPlaylist = async (opts?: Opts) => {
     setSavePlState('Saving...');
-    let ok = false;
+    setTimeout(() => {
+      setSavePlState('Save');
+    }, 5000);
     const PlData = {
       playlistName,
       playlistDescription,
       kaomoji: easterEggKaomoji,
     };
-    if (opts?.full) {
-      ok = await saveUserPl(PlaylistSongs, PlData);
-    } else if (opts?.empty) {
-      ok = await saveUserPl([], PlData);
+    function getSongs(
+      opts: Opts | undefined,
+      pls: Song[],
+      current: Song[]
+    ): Song[] {
+      if (opts?.full) {
+        return pls;
+      }
+      if (opts?.empty) {
+        return current;
+      }
+      return current;
     }
-    if (ok) {
+    const songs = getSongs(opts, PlaylistSongs, currentSongs.items);
+    const [data, err] = await saveUserPl(songs, PlData);
+    if (err || data === null) {
+      setSavePlState('Error');
+      console.error(err);
+      return;
+    }
+    if (Object.keys(data).length) {
       setPingState('hidden');
       setSavePlState('Saved');
     } else {
       setSavePlState('Error');
+      console.error('Cant save playlist');
     }
-    setTimeout(() => {
-      setSavePlState('Save');
-    }, 5000);
   };
 
   return (
@@ -114,7 +130,6 @@ const SavePlaylist = ({ className }: { className?: string }) => {
                 <DropdownMenuItem>
                   <Button
                     onClick={() => saveUserPlaylist({ empty: true })}
-                    variant="ghost"
                     className="w-full"
                   >
                     Save empty playlist
@@ -123,7 +138,6 @@ const SavePlaylist = ({ className }: { className?: string }) => {
                 <DropdownMenuItem>
                   <Button
                     onClick={() => saveUserPlaylist({ full: true })}
-                    variant="ghost"
                     className="w-full"
                   >
                     Save full playlist

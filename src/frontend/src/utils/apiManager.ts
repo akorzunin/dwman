@@ -297,7 +297,10 @@ export interface SavePlOptions {
   kaomoji?: string;
 }
 
-export const saveUserPl = async (songs: Song[], opts?: SavePlOptions) => {
+export const saveUserPl = async (
+  songs: Song[],
+  opts?: SavePlOptions
+): Promise<[SpotifyApi.AddTracksToPlaylistResponse | null, Error | null]> => {
   // Create new playlist
   const userData = await getUserData();
   const PlData = await generatePlData(
@@ -307,7 +310,7 @@ export const saveUserPl = async (songs: Song[], opts?: SavePlOptions) => {
     { songs: songs, kaomoji: opts?.kaomoji }
   );
   if (!userData.id) {
-    return false;
+    return [null, Error('No user id')];
   }
   const token = await getAccessToken();
   const res = await fetch(
@@ -327,12 +330,12 @@ export const saveUserPl = async (songs: Song[], opts?: SavePlOptions) => {
     }
   );
   if (!checkStatusCode(res)) {
-    return false;
-  }
-  if (songs.length === 0) {
-    return true;
+    return [null, Error(`Cant create playlist, status: ${res.status}`)];
   }
   const resData = (await res.json()) as SpotifyApi.CreatePlaylistResponse;
+  if (songs.length === 0) {
+    return [resData, null];
+  }
   // wait some time before spotify create playlist
   await new Promise((resolve) => setTimeout(resolve, 500));
   // add songs to playlist
@@ -357,9 +360,9 @@ export const saveUserPl = async (songs: Song[], opts?: SavePlOptions) => {
     }
   );
   if (!checkStatusCode(plRes)) {
-    return false;
+    return [null, Error(`Cant add songs to playlist, status: ${plRes.status}`)];
   }
   const data = (await plRes.json()) as SpotifyApi.AddTracksToPlaylistResponse;
   console.info('Created', data);
-  return true;
+  return [data, null];
 };
