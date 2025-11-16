@@ -28,7 +28,7 @@ const Playlist: FC<IPlayList> = ({ title, songs, isDW, className }) => {
             />
           ))
         ) : (
-          <div className="opacity-50">
+          <div className="">
             <SongCard
               song={emptySong}
               index={0}

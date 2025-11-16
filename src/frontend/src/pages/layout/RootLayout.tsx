@@ -8,6 +8,7 @@ import { useAtomValue } from 'jotai';
 import { CurrentSongAtom } from '../../store/store';
 import BurgerMenu from '../../components/menu/BurgerMenu';
 import HeaderSongCard from '../../components/HeaderSongCard';
+import { Login } from '../../components/buttons/Login';
 
 export function RootLayout() {
   const { userId } = useParams();
@@ -42,11 +43,7 @@ export function RootLayout() {
               <Link to="/app/">DWMan</Link>
             </div>
             <div className="flex gap-x-3 tablet:hidden">
-              <Button asChild>
-                <Link reloadDocument to={`${OpenAPI.BASE}/login`}>
-                  Login
-                </Link>
-              </Button>
+              <Login basePath={OpenAPI.BASE} />
               <BurgerMenu userId={userId} />
             </div>
             <div className="hidden gap-x-3 tablet:flex">
@@ -56,11 +53,7 @@ export function RootLayout() {
               <Button asChild>
                 <Link to="/app/help">Help</Link>
               </Button>
-              <Button asChild>
-                <Link reloadDocument to={`${OpenAPI.BASE}/login`}>
-                  Login
-                </Link>
-              </Button>
+              <Login basePath={OpenAPI.BASE} />
               <ModeToggle />
             </div>
           </div>

@@ -28,7 +28,7 @@ const SaveSongPlaylist: FC = () => {
             />
           ))
       ) : (
-        <div className="opacity-50">
+        <div className="">
           <SongCard song={emptySong} index={0} isDeletable={false} />
         </div>
       )}

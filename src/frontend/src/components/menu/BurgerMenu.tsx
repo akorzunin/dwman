@@ -10,6 +10,7 @@ import {
 } from '../../shadcn/ui/sheet';
 import { Link } from 'react-router';
 import { OpenAPI } from '../../api/client';
+import { Login } from '../buttons/Login';
 
 interface IBurgerMenu {
   className?: string;
@@ -43,11 +44,7 @@ const BurgerMenu: FC<IBurgerMenu> = ({ className, userId }) => {
               </Button>
             </>
           ) : (
-            <Button asChild>
-              <Link reloadDocument to={`${OpenAPI.BASE}/login`}>
-                Login
-              </Link>
-            </Button>
+            <Login basePath={OpenAPI.BASE} />
           )}
         </SheetContent>
       </Sheet>

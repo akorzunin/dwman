@@ -103,13 +103,13 @@ const SavePlaylist = ({ className }: { className?: string }) => {
                   className="rounded-none rounded-r-md border-l-2"
                 >
                   <ChevronDown className="absolute h-[1.2rem] w-[1.2rem]" />
-                  <span className="sr-only">Toggle theme</span>
+                  <span className="sr-only">Open menu</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
                 sideOffset={5}
-                className="z-100 flex w-52 flex-col gap-2 rounded-md bg-secondary p-2 text-primary"
+                className="z-1000 flex w-52 flex-col gap-2 rounded-md bg-secondary bg-opacity-100 p-2 text-primary opacity-100"
               >
                 <DropdownMenuItem>
                   <Button
