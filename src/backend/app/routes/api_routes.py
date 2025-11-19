@@ -8,7 +8,6 @@ from fastapi.security import HTTPBasicCredentials
 
 from backend.app import crud, shemas
 from backend.app.auth import check_credentials, security
-from backend.app.db_connector import users
 from backend.app.mail_handle import render_notification_text, send_email
 from backend.app.task_handler import (
     manage_user_tasks,
@@ -16,6 +15,7 @@ from backend.app.task_handler import (
     send_notifications_task,
 )
 from backend.app.utils import get_access_token
+from src.backend.app.db_connector import UsersTable
 
 router = APIRouter(
     prefix="/api",
@@ -59,7 +59,7 @@ async def send_mail(user_email: shemas.UserEmail):
 
 
 @router.post("/test_save_email")
-async def test_save_email(user_email: shemas.UserEmail):
+async def test_save_email(user_email: shemas.UserEmail, users: UsersTable):
     """Test save email"""
     user = crud.get_user_by_email(users, user_email.email)
     # task = user_notify_task(user)
@@ -82,6 +82,7 @@ async def test_save_email(user_email: shemas.UserEmail):
     response_model=list[shemas.User],
 )
 async def get_users(
+    users: UsersTable,
     credentials: HTTPBasicCredentials = Depends(security),
 ):
     """Get all users from database"""
@@ -98,7 +99,7 @@ async def get_users(
     },
     # response_model=shemas.User,
 )
-async def get_user(user_id: str):
+async def get_user(user_id: str, users: UsersTable):
     """Get user by user_id"""
     if user := crud.get_user(users, user_id):
         return user
@@ -113,14 +114,15 @@ async def get_user(user_id: str):
     response_model=shemas.User,
     responses={status.HTTP_400_BAD_REQUEST: {"model": shemas.Message}},
 )
-async def create_user(user: shemas.CreateUser):
+async def create_user(user: shemas.CreateUser, users: UsersTable):
     """Create new user"""
-    if created_user := crud.create_user(users, user):
-        return created_user
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content={"message": "User already exists"},
-    )
+    try:
+        return crud.create_user(users, user)
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"message": str(e)},
+        )
 
 
 @router.put(
@@ -130,16 +132,20 @@ async def create_user(user: shemas.CreateUser):
         status.HTTP_404_NOT_FOUND: {"model": shemas.Message},
     },
 )
-async def update_user(user: shemas.UpdateUser, user_id: str):
+async def update_user(user: shemas.UpdateUser, user_id: str, users: UsersTable):
     """Update user"""
-    if updated_user := crud.update_user(users, user, user_id):
-        if message := manage_user_tasks(updated_user):
-            logger.warning(message.model_dump())
-        return updated_user
-    return JSONResponse(
-        status_code=status.HTTP_404_NOT_FOUND,
-        content={"message": "User not found"},
-    )
+    try:
+        updated_user = crud.update_user(users, user, user_id)
+        if not updated_user:
+            raise ValueError("User not found")
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"message": str(e)},
+        )
+    if message := manage_user_tasks(updated_user):
+        logger.warning(message.model_dump())
+    return updated_user
 
 
 @router.delete(
@@ -151,6 +157,7 @@ async def update_user(user: shemas.UpdateUser, user_id: str):
 )
 async def delete_user(
     user_id: str,
+    users: UsersTable,
     credentials: HTTPBasicCredentials = Depends(security),
 ):
     """Delete user by id"""

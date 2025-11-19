@@ -23,14 +23,12 @@ def get_user_by_email(db, email: str):
 
 
 def create_user(db, user: shemas.CreateUser) -> shemas.User:
-    if not db.get(where("user_id") == user.user_id):
-        new_user = user.model_dump() | {
-            "created_at": datetime.now(timezone.utc)
-        }
-        parced_user = shemas.User(**new_user)
-        db.insert(parced_user.model_dump())
-        return parced_user
-    raise ValueError("Could not create new user")
+    if db.get(where("user_id") == user.user_id):
+        raise ValueError("User already exists")
+    new_user = user.model_dump() | {"created_at": datetime.now(timezone.utc)}
+    parced_user = shemas.User(**new_user)
+    db.insert(parced_user.model_dump())
+    return parced_user
 
 
 def update_user(
@@ -38,6 +36,8 @@ def update_user(
     user: shemas.UpdateUser,
     user_id: str,
 ) -> shemas.User:
+    if not db.get(where("user_id") == user_id):
+        raise ValueError("User not found")
     if user_upd := {
         k: v for k, v in user.model_dump().items() if v is not None
     }:

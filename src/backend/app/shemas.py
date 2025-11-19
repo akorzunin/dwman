@@ -68,6 +68,7 @@ class UpdateUser(BaseModel):
     save_dw_weekly: bool | None = None
     save_full_playlist: bool | None = None
     filter_dislikes: bool | None = None
+    tg_chat_id: str | None = None
 
     @field_validator("send_time", "save_time", mode="after")
     def parse_date(cls, value):
