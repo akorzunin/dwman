@@ -29,12 +29,14 @@ from backend.app.task_handler import (
 )
 
 IGNORE_CORS = bool(eval(os.getenv("IGNORE_CORS", "False")))
+ASSETS_DIR = "src/frontend/dist/assets"
 
 templates = Jinja2Templates(directory="src/frontend/templates")
 
 
 setup_logging(
-    json_logs=not sys.stderr.isatty(),
+    json_logs=os.getenv("JSON_LOGS", str(not sys.stdout.isatty()))
+    in ["1", "True", "True"],
     log_level=os.getenv("LOG_LEVEL", "INFO"),
 )
 access_logger = structlog.stdlib.get_logger("api.access")
@@ -64,10 +66,11 @@ async def get_open_api_endpoint():
     )
 
 
+Path(ASSETS_DIR).mkdir(parents=True, exist_ok=True)
 app.mount(
     "/assets",
     app=StaticFiles(
-        directory="src/frontend/dist/assets",
+        directory=ASSETS_DIR,
     ),
     name="assets",
 )
