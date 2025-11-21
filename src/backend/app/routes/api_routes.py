@@ -8,6 +8,7 @@ from fastapi.security import HTTPBasicCredentials
 
 from backend.app import crud, shemas
 from backend.app.auth import check_credentials, security
+from backend.app.db_connector import UsersTable
 from backend.app.mail_handle import render_notification_text, send_email
 from backend.app.task_handler import (
     manage_user_tasks,
@@ -15,7 +16,6 @@ from backend.app.task_handler import (
     send_notifications_task,
 )
 from backend.app.utils import get_access_token
-from src.backend.app.db_connector import UsersTable
 
 router = APIRouter(
     prefix="/api",

@@ -1,9 +1,13 @@
+import sys
+
+sys.path.insert(0, "src")
+
 import pytest
 from fastapi.testclient import TestClient
 from tinydb import TinyDB
 from tinydb.storages import MemoryStorage
 
-from src.backend.app.db_connector import get_users_table
+from backend.app.db_connector import get_users_table
 from src.main import app
 
 

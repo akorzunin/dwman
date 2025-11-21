@@ -11,6 +11,10 @@ RUN pnpm run build
 
 FROM python:3.11-slim AS runner
 
+RUN apt-get update && \
+	apt-get install -y curl && \
+	apt-get clean && rm -rf /var/lib/apt/lists/*
+
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=off

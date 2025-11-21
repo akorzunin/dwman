@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import structlog
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
@@ -66,12 +66,18 @@ async def get_open_api_endpoint():
     )
 
 
+@app.get("/health", tags=["Health"])
+async def health():
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "ok"},
+    )
+
+
 Path(ASSETS_DIR).mkdir(parents=True, exist_ok=True)
 app.mount(
     "/assets",
-    app=StaticFiles(
-        directory=ASSETS_DIR,
-    ),
+    app=StaticFiles(directory=ASSETS_DIR),
     name="assets",
 )
 
