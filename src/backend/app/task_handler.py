@@ -216,17 +216,16 @@ def user_notify_task(user: shemas.NotifyUser) -> schedule.Job:
 
 async def send_notification(user: shemas.User):
     logger.info(
-        f"Sending notification to {user.email} at {datetime.now(timezone.utc)}"
+        f"Sending notification to {user.user_id} at {datetime.now(timezone.utc)}"
     )
-    err = send_telegram_notification(
-        user.tg_chat_id,
-        f"""
+    msg = f"""
 Save Discover Weekly Playlist {get_pl_name(user.user_id)}
 
 dwman: https://dwman.akorz-sw1.duckdns.org/
-playlist link: https://open.spotify.com/playlist/{user.dw_playlist_id}
-""",
-    )
+"""
+    if user.tg_chat_id:
+        msg += f"playlist link: https://open.spotify.com/playlist/{user.dw_playlist_id}"
+    err = send_telegram_notification(user.tg_chat_id, msg)
     if err is not None:
         logger.error(err)
 
