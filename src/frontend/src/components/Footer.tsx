@@ -2,6 +2,7 @@ import { FC } from 'react';
 import { emailLogo, githubLogo, telegramLogo } from '../icons/Logos';
 import { EasterEgg } from './EasterEgg';
 import { cn } from '../lib/utils';
+import { Separator } from '@radix-ui/react-dropdown-menu';
 
 interface IFooter {
   className?: string;
@@ -9,7 +10,12 @@ interface IFooter {
 
 const Footer: FC<IFooter> = ({ className }) => {
   return (
-    <footer className={cn('fixed inset-x-0 bottom-0 laptop:static', className)}>
+    <footer
+      className={cn(
+        'fixed inset-x-0 bottom-0 bg-primary laptop:static',
+        className
+      )}
+    >
       <div className="border-b border-primary p-0.5" />
       <div className="flex justify-end gap-4 px-4 py-4">
         <div className="flex gap-3">
@@ -55,11 +61,11 @@ const Footer: FC<IFooter> = ({ className }) => {
           </span>
         </div>
       </div>
-
+      <Separator className="mx-4 border-b border-primary-foreground/50" />
       <div className="bg-primary">
         <div className="flex items-center justify-between truncate px-5 py-4">
           <p className="text-sm text-muted-foreground">
-            2022 —{' '}
+            2022 — {new Date().getFullYear() + ' '}
             <a
               href="https://github.com/akorzunin"
               target="_blank"
