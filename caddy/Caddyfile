@@ -1,4 +1,3 @@
 {$DOMAIN} {
-	tls {$MAIL_USERNAME}
 	reverse_proxy spotifydwapi:{$PORT:-8000}
 }
