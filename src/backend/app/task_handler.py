@@ -229,14 +229,6 @@ playlist link: https://open.spotify.com/playlist/{user.dw_playlist_id}
     )
     if err is not None:
         logger.error(err)
-    await send_email(
-        user.email,
-        "Save Discover Weekly Playlist",
-        render_notification_text(
-            user.dw_playlist_id,
-            user.user_id,
-        ),
-    )
 
 
 async def save_dw(user: shemas.SavePlUser):

@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type UserEmail = {
-  email: string;
   subject: string;
   text: string;
+  tg_chat_id: string;
 };

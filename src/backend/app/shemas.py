@@ -77,12 +77,6 @@ class UpdateUser(BaseModel):
         return ""
 
 
-class UserEmail(BaseModel):
-    email: EmailStr
-    subject: str
-    text: str
-
-
 class Message(BaseModel):
     message: str
 

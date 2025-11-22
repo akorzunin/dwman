@@ -34,38 +34,18 @@ export class ApiService {
     });
   }
   /**
-   * Send Mail
-   * Send mail to user
-   * @param requestBody
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public static sendMailApiSendMailPost(
-    requestBody: UserEmail
-  ): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: 'POST',
-      url: '/api/send_mail',
-      body: requestBody,
-      mediaType: 'application/json',
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Test Save Email
+   * Test Notification
    * Test save email
    * @param requestBody
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static testSaveEmailApiTestSaveEmailPost(
+  public static testNotificationApiTestNotificationPost(
     requestBody: UserEmail
   ): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: 'POST',
-      url: '/api/test_save_email',
+      url: '/api/test-notification',
       body: requestBody,
       mediaType: 'application/json',
       errors: {

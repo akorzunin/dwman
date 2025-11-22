@@ -1,15 +1,14 @@
-import asyncio
 from typing import Literal
 
 import structlog
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasicCredentials
+from pydantic import BaseModel
 
 from backend.app import crud, shemas
 from backend.app.auth import check_credentials, security
 from backend.app.db_connector import UsersTable
-from backend.app.mail_handle import render_notification_text, send_email
 from backend.app.task_handler import (
     manage_user_tasks,
     send_notification,
@@ -38,41 +37,27 @@ async def refresh_token(
     return res
 
 
-### Mail routes
-@router.post(
-    "/send_mail",
-    status_code=status.HTTP_200_OK,
-)
-async def send_mail(user_email: shemas.UserEmail):
-    """Send mail to user"""
-    asyncio.gather(
-        send_email(
-            email=user_email.email,
-            subject=user_email.subject,
-            mail_text=user_email.text,
-        )
-    )
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"message": "email has been sent"},
-    )
+class UserEmail(BaseModel):
+    subject: str
+    text: str
+    tg_chat_id: str
 
 
-@router.post("/test_save_email")
-async def test_save_email(user_email: shemas.UserEmail, users: UsersTable):
+@router.post("/test-notification")
+async def test_notification(msg: UserEmail, users: UsersTable):
     """Test save email"""
-    user = crud.get_user_by_email(users, user_email.email)
-    # task = user_notify_task(user)
-    send_notification(
-        user_email.email,
-        text=render_notification_text(
-            user.dw_playlist_id,
-            user.user_id,
-        ),
-    )
+    try:
+        user = crud.get_user_by_tg_chat_id(users, msg.tg_chat_id)
+    except Exception as e:
+        logger.exception(e)
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"message": "User not found"},
+        )
+    await send_notification(user)
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"message": "email has been sent"},
+        content={"message": "notification has been sent"},
     )
 
 

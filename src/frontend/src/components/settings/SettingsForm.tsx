@@ -36,6 +36,10 @@ const updateUserSchema = z.object({
   save_hour_minute: z.string({
     message: 'Save time must be at least 5 characters. ex: 16:00',
   }),
+  tg_chat_id: z
+    .string()
+    .min(5, { message: 'TG chat id must be at least 5 characters.' })
+    .optional(),
 }) satisfies ZodType<UpdateUser>;
 
 type FormData = z.infer<typeof updateUserSchema>;
@@ -46,6 +50,7 @@ export const SettingsForm = () => {
     resolver: zodResolver(updateUserSchema),
     defaultValues: {
       email: '',
+      tg_chat_id: '',
       save_weekday: 'Mo',
       save_hour_minute: '00:00',
       dw_playlist_id: '',
@@ -60,7 +65,7 @@ export const SettingsForm = () => {
     }
     if (values.send_mail && values.save_weekday) {
       updateUser.send_mail = values.send_mail;
-      updateUser.email = values.email;
+      updateUser.tg_chat_id = values.tg_chat_id;
       updateUser.send_time = parseFormTime(
         values.save_hour_minute,
         values.save_weekday
@@ -94,6 +99,9 @@ export const SettingsForm = () => {
     if (userData.email) {
       form.setValue('email', userData.email);
     }
+    if (userData.tg_chat_id) {
+      form.setValue('tg_chat_id', userData.tg_chat_id);
+    }
   }, [form, userData]);
   return (
     <div className="rounded-md bg-secondary bg-opacity-30 p-4">
@@ -111,37 +119,39 @@ export const SettingsForm = () => {
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
-                  <FormLabel className="m-0">Send weekly email</FormLabel>
+                  <FormLabel className="m-0">Send notification</FormLabel>
                 </FormItem>
               )}
             />
             <Button
-              onClick={async () => {
-                if (!userData.email) {
-                  console.warn('No email');
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!userData.tg_chat_id) {
+                  console.warn('No tg_chat_id');
                   return;
                 }
-                const res = await ApiService.testSaveEmailApiTestSaveEmailPost({
-                  email: userData.email,
-                  subject: 'test',
-                  text: 'test',
-                });
+                const res =
+                  await ApiService.testNotificationApiTestNotificationPost({
+                    tg_chat_id: userData.tg_chat_id,
+                    subject: 'test',
+                    text: 'test',
+                  });
                 console.info(res);
               }}
             >
-              Test Notification
+              Test Notification asdasd
             </Button>
           </div>
           {(sendMailValue || userData.send_mail) && (
             <>
               <FormField
                 control={form.control}
-                name="email"
+                name="tg_chat_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>E-mail</FormLabel>
+                    <FormLabel>Telegram chat id</FormLabel>
                     <FormControl className="mt-1">
-                      <Input placeholder="pepegus@amogus.pog" {...field} />
+                      <Input placeholder="123456789" {...field} />
                     </FormControl>
                     <FormMessage className="pt-1" />
                   </FormItem>

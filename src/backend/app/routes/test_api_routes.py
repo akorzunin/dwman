@@ -1,13 +1,14 @@
 from fastapi.testclient import TestClient
 
 
-def setup_user(client: TestClient):
+def setup_user(client: TestClient, **kw):
     resp = client.post(
         "/api/new_user",
         json=dict(
             user_id="u123",
             is_premium=False,
             refresh_token="rt_123",
+            **kw,
         ),
     )
     return resp
@@ -64,3 +65,13 @@ def test_update_user_not_found(client):
     )
     assert resp.status_code == 400
     assert resp.json()["message"] == "User not found"
+
+
+def test_notify_user_ok(client: TestClient):
+    _ = setup_user(client, tg_chat_id="tg_123")
+    resp = client.post(
+        "/api/test-notification",
+        json={"tg_chat_id": "tg_123", "subject": "test", "text": "test"},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["message"] == "notification has been sent"

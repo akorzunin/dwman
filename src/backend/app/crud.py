@@ -22,6 +22,10 @@ def get_user_by_email(db, email: str):
     return shemas.User(**db.get(where("email") == email))
 
 
+def get_user_by_tg_chat_id(db, tg_chat_id: str):
+    return shemas.User(**db.get(where("tg_chat_id") == tg_chat_id))
+
+
 def create_user(db, user: shemas.CreateUser) -> shemas.User:
     if db.get(where("user_id") == user.user_id):
         raise ValueError("User already exists")
