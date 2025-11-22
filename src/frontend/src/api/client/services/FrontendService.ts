@@ -1,21 +1,42 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-
+/* eslint-disable */
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class FrontendService {
   /**
    * Root
-   * Redirect to react hash router main page
-   * @returns string Successful Response
+   * @returns any Successful Response
    * @throws ApiError
    */
-  public static rootGet(): CancelablePromise<string> {
+  public static rootGet(): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: 'GET',
       url: '/',
+    });
+  }
+  /**
+   * Favicon
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static faviconFaviconIcoGet(): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: 'GET',
+      url: '/favicon.ico',
+    });
+  }
+  /**
+   * React Path
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static reactPathAppGet(): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: 'GET',
+      url: '/app/{_}',
     });
   }
   /**
@@ -47,7 +68,7 @@ export class FrontendService {
    * @throws ApiError
    */
   public static loginUrlLoginGet(
-    state: string = 'Pk`BEB885nj_*&>',
+    state: string = 'Gx)KS)!w(d>`|~#I',
     showDialog: 'true' | 'false' = 'false'
   ): CancelablePromise<void> {
     return __request(OpenAPI, {

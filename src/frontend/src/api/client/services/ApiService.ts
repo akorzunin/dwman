@@ -5,6 +5,7 @@
 import type { CreateUser } from '../models/CreateUser';
 import type { Message } from '../models/Message';
 import type { RefreshToken } from '../models/RefreshToken';
+import type { SpotifyError } from '../models/SpotifyError';
 import type { SpotifyToken } from '../models/SpotifyToken';
 import type { UpdateUser } from '../models/UpdateUser';
 import type { User } from '../models/User';
@@ -16,12 +17,12 @@ export class ApiService {
   /**
    * Refresh Token
    * @param requestBody
-   * @returns SpotifyToken Successful Response
+   * @returns any Successful Response
    * @throws ApiError
    */
   public static refreshTokenApiRefreshTokenPost(
     requestBody: RefreshToken
-  ): CancelablePromise<SpotifyToken> {
+  ): CancelablePromise<SpotifyToken | SpotifyError> {
     return __request(OpenAPI, {
       method: 'POST',
       url: '/api/refresh_token',
@@ -88,10 +89,10 @@ export class ApiService {
    * Get User
    * Get user by user_id
    * @param userId
-   * @returns User Successful Response
+   * @returns any Successful Response
    * @throws ApiError
    */
-  public static getUserApiUserGet(userId: string): CancelablePromise<User> {
+  public static getUserApiUserGet(userId: string): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: 'GET',
       url: '/api/user',
@@ -147,7 +148,6 @@ export class ApiService {
       mediaType: 'application/json',
       errors: {
         404: `Not Found`,
-        412: `Precondition Failed`,
         422: `Validation Error`,
       },
     });
@@ -167,6 +167,30 @@ export class ApiService {
       url: '/api/delete_user',
       query: {
         user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Force Notifications Task
+   * Send notifications task
+   * @param weekday
+   * @param hour
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static forceNotificationsTaskApiForceNotificationsTaskPost(
+    weekday?: '0' | '1' | '2' | '3' | '4' | '5' | '6' | null,
+    hour?: number | null
+  ): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: 'POST',
+      url: '/api/force_notifications_task',
+      query: {
+        weekday: weekday,
+        hour: hour,
       },
       errors: {
         422: `Validation Error`,

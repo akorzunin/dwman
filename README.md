@@ -58,7 +58,9 @@ it will automatically spin up vite dev server at <https://test-dwman.localhost/>
 
 ### Generate ts client
 
-npx openapi-typescript-codegen --input http://localhost:8000/openapi.json --output ./src/frontend/src/api/client --client fetch && pre-commit run --all-files
+```bash
+pnpm dlx openapi-typescript-codegen@0.29.0 --input http://localhost:8000/openapi.json --output ./src/frontend/src/api/client --client fetch && pre-commit run --all-files
+```
 
 ## License
 
