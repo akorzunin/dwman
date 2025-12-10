@@ -28,7 +28,19 @@ Test server: <https://test-dwman.akorz-sw1.duckdns.org/>
 
 ### Backend
 
-Need python 3.11+, uv, caddy
+Dependencies:
+
+```sh
+python
+uv
+caddy
+```
+
+Caddy setup on linux:
+
+```sh
+sudo setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/caddy
+```
 
 ```sh
 git clone ...
