@@ -1,0 +1,30 @@
+services:
+  dwman:
+    image: akorzunin/dwman:${IMAGE_TAG}
+    container_name: dwman-${ENVIRONMENT_NAME}
+    ports:
+      - 127.0.0.1:${PORT:-8000}:8000
+    restart: unless-stopped
+    environment:
+      - SPOTIPY_CLIENT_ID=${SPOTIPY_CLIENT_ID}
+      - SPOTIPY_CLIENT_SECRET=${SPOTIPY_CLIENT_SECRET}
+      - SPOTIPY_REDIRECT_URL=${SPOTIPY_REDIRECT_URL}
+      - API_LOGIN=${API_LOGIN}
+      - API_PASSWORD=${API_PASSWORD}
+      - TG_BOT_TOKEN=${TG_BOT_TOKEN}
+      - IGNORE_CORS=${IGNORE_CORS:-}
+    volumes:
+      - ./data:/app/data:rw
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      org.opencontainers.group: "logging"
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+        reservations:
+          memory: 50M

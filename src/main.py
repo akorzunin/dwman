@@ -28,7 +28,7 @@ from backend.app.task_handler import (
     send_notifications_task,
 )
 
-IGNORE_CORS = bool(eval(os.getenv("IGNORE_CORS", "False")))
+IGNORE_CORS = os.getenv("IGNORE_CORS", "False") in ["1", "True", "true"]
 ASSETS_DIR = "src/frontend/dist/assets"
 
 templates = Jinja2Templates(directory="src/frontend/templates")

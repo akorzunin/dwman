@@ -37,5 +37,4 @@ COPY --from=frontend ["/frontend/dist", "./src/frontend/dist"]
 
 EXPOSE 8000
 
-
-CMD ["uv", "run", "main.py"]
+CMD [".venv/bin/python", "main.py"]

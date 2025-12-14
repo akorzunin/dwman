@@ -1,0 +1,46 @@
+- name: Deploy dwman to test
+  hosts: all
+  become: false
+  vars:
+    project_dir: "/srv/deploy/dwman-{{ ENVIRONMENT_NAME }}"
+
+  tasks:
+    - name: Create deploy dir
+      become: true
+      ansible.builtin.file:
+        path: "{{ project_dir }}"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        state: directory
+        recurse: true
+        mode: "0755"
+
+    - name: Copy files for deploy
+      ansible.builtin.copy:
+        src: compose.yml
+        dest: "{{ project_dir }}"
+        mode: "0644"
+
+    - name: "Deploy dwman-{{ ENVIRONMENT_NAME }}"
+      ansible.builtin.command:
+        cmd: docker compose up -d
+        chdir: "{{ project_dir }}"
+      environment:
+        IMAGE_TAG: "{{ IMAGE_TAG }}"
+        ENVIRONMENT_NAME: "{{ ENVIRONMENT_NAME }}"
+        SPOTIPY_CLIENT_ID: "{{ SPOTIPY_CLIENT_ID }}"
+        SPOTIPY_CLIENT_SECRET: "{{ SPOTIPY_CLIENT_SECRET }}"
+        SPOTIPY_REDIRECT_URL: "{{ SPOTIPY_REDIRECT_URL }}"
+        API_LOGIN: "{{ API_LOGIN }}"
+        API_PASSWORD: "{{ API_PASSWORD }}"
+        PORT: "{{ PORT }}"
+        TG_BOT_TOKEN: "{{ TG_BOT_TOKEN }}"
+        IGNORE_CORS: "{{ IGNORE_CORS }}"
+      register: out
+      changed_when: out.rc != 0
+
+    - name: Remove old version of image
+      ansible.builtin.command:
+        cmd: docker image prune --filter="dangling=true" --force
+      register: out
+      changed_when: out.rc != 0
