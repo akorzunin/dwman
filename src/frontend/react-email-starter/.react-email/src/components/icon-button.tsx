@@ -1,8 +1,7 @@
 import classnames from 'classnames';
 import * as React from 'react';
 
-export interface IconButtonProps
-  extends React.ComponentPropsWithoutRef<'button'> {}
+export interface IconButtonProps extends React.ComponentPropsWithoutRef<'button'> {}
 
 export const IconButton = React.forwardRef<
   HTMLButtonElement,
