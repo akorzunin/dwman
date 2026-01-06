@@ -67,8 +67,8 @@ export function ThemeProvider({
     if (theme === 'system') {
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
         .matches
-        ? 'dark'
-        : 'light';
+        ? 'office-dark'
+        : 'office-light';
 
       root.classList.add(systemTheme);
       return;
