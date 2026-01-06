@@ -15,7 +15,7 @@ import {
 } from '../store/store';
 import { fullYear, weekNumber } from '../utils/timeMangment';
 import { cn } from '../lib/utils';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -93,7 +93,7 @@ const SavePlaylist = ({ className }: { className?: string }) => {
           title={`Saved playlist: ${fullYear}_${weekNumber}`}
           isDW={true}
         />
-        <div className="flex justify-between gap-3 p-3">
+        <div className="flex justify-between gap-3 overflow-x-hidden py-2">
           <div className="relative inline-flex">
             <Button
               variant="secondary"
@@ -146,21 +146,23 @@ const SavePlaylist = ({ className }: { className?: string }) => {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <Button variant="secondary" onClick={onClear}>
-            Clear
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => setIsSpinning(!IsSpinning)}
-          >
-            Spin
-          </Button>
-          <Button
-            variant={listenPlayback ? 'secondary' : 'third'}
-            onClick={() => setListenPlayback(!listenPlayback)}
-          >
-            From playback
-          </Button>
+          <div className="flex gap-x-2">
+            <Button
+              variant="secondary"
+              onClick={() => setIsSpinning(!IsSpinning)}
+            >
+              Spin
+            </Button>
+            <Button
+              variant={listenPlayback ? 'secondary' : 'third'}
+              onClick={() => setListenPlayback(!listenPlayback)}
+            >
+              From playback
+            </Button>
+            <Button variant="secondary" onClick={onClear}>
+              <Trash2 />
+            </Button>
+          </div>
         </div>
         <SaveSongPlaylist />
       </div>

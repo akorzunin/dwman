@@ -8,6 +8,7 @@
   .ff-scrollbar {
     scrollbar-color: rgb(75 85 99) rgba(255, 255, 255, 0);
   }
+
   /* width */
   ::-webkit-scrollbar {
     width: 8px;
@@ -28,11 +29,6 @@
   /* Handle on hover */
   ::-webkit-scrollbar-thumb:hover {
     background: rgb(107 114 128);
-  }
-
-  /* TODO: temporay fix until all old buttons removed and only ShadCn buttons left*/
-  .btn {
-    @apply transition-transform duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0.5;
   }
 }
 
@@ -88,9 +84,11 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   :root {
     /* background of the whole page */
     --main-background: linear-gradient(
@@ -175,6 +173,7 @@
     --secondary: var(--color-slate-500);
     --third: var(--color-slate-600);
   }
+
   .office-dark {
     --main-background: var(--color-slate-900);
     --background: var(--color-slate-800);

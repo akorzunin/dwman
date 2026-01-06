@@ -1,10 +1,10 @@
 import { FC } from 'react';
-import { Song } from '../interfaces/Song';
-import { cn } from '../lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '../shadcn/ui/avatar';
+import { Song } from '../../interfaces/Song';
+import { cn } from '../../lib/utils';
 import { useAtom } from 'jotai';
-import { deleteSongSetAtom, SongSetAtom } from '../store/store';
+import { deleteSongSetAtom, SongSetAtom } from '../../store/store';
 import { Plus, X } from 'lucide-react';
+import SongView from './../songs/SongView';
 
 interface ISongCard {
   song: Song;
@@ -36,16 +36,7 @@ const SongCard: FC<ISongCard> = ({
     >
       <div className="flex w-[85%] flex-shrink items-center gap-x-3">
         <div className="flex">{Number.isNaN(index) ? '' : index}</div>
-        <Avatar className="-z-10 h-[64px] w-[64px] rounded-none">
-          <AvatarImage src={song.imgUrl} className="h-full" alt="song cover" />
-          <AvatarFallback className="rounded-none">NA</AvatarFallback>
-        </Avatar>
-        <div className="">
-          <p className="line-clamp-1">{song.name.slice(0, 30)}</p>
-          <p className="line-clamp-1 opacity-80">
-            {song.artists.map((artist) => artist).join(', ')}
-          </p>
-        </div>
+        <SongView song={song} />
       </div>
       <div className="flex gap-x-3">
         <button

@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import SongCard from './SongCard';
+import SongCard from './songs/SongCard';
 import { emptySong, Song } from '../interfaces/Song';
 import PlaylistTitle from './PlaylistTitle';
 import { cn } from '../lib/utils';

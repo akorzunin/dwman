@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import SongCard from './SongCard';
+import SongCard from './songs/SongCard';
 import { emptySong, Song } from '../interfaces/Song';
 import { useAtomValue } from 'jotai';
 import { SongSetAtom } from '../store/store';

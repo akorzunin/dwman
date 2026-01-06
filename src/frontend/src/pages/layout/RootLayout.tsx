@@ -7,7 +7,7 @@ import UserCard from '../../components/UserCard';
 import { useAtomValue } from 'jotai';
 import { CurrentSongAtom } from '../../store/store';
 import BurgerMenu from '../../components/menu/BurgerMenu';
-import HeaderSongCard from '../../components/HeaderSongCard';
+import HeaderSongCard from '../../components/songs/HeaderSongCard';
 import { Login } from '../../components/buttons/Login';
 
 export function RootLayout() {
@@ -16,14 +16,14 @@ export function RootLayout() {
 
   return (
     <div className="container relative flex h-screen flex-col laptop:justify-between">
-      <header className="flex p-4">
+      <header className="flex px-2 py-4">
         {userId ? (
-          <div className="flex w-full items-center justify-between">
-            <UserCard />
-            <HeaderSongCard song={CurrentSong} isAddable={true} />
-            <div className="gap-x-3 desktop:hidden">
-              <BurgerMenu userId={userId} />
+          <div className="w-full items-center justify-between">
+            <div className="flex w-full items-center justify-between">
+              <UserCard />
+              <BurgerMenu userId={userId} className="desktop:hidden" />
             </div>
+            <HeaderSongCard song={CurrentSong} isAddable={true} />
             <div className="hidden gap-x-3 desktop:flex">
               <Button asChild>
                 <Link to="/app/">Home</Link>

@@ -50,15 +50,15 @@ export const UserPage: FC = () => {
   });
 
   return (
-    <div className="mx-auto flex h-[70vh] w-[448px] flex-col gap-y-3 laptop:w-full laptop:flex-row laptop:justify-center laptop:gap-x-3">
+    <div className="mx-auto flex h-[70vh] flex-col gap-y-3 px-2 laptop:w-full laptop:flex-row laptop:justify-center laptop:gap-x-3">
       <Playlist
         title={PlaylistName}
         songs={PlSongs}
         isDW={isDW}
         className={cn('', PlSongs.length === 0 && 'hidden')}
       />
-      <SavePlaylist className="max-w-[448px]" />
-      <SettingsPanelV2 className="max-w-[448px]" />
+      <SavePlaylist className="" />
+      <SettingsPanelV2 className="" />
     </div>
   );
 };
