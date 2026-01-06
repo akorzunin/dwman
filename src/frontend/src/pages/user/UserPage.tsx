@@ -50,7 +50,7 @@ export const UserPage: FC = () => {
   });
 
   return (
-    <div className="mx-auto flex h-[70vh] flex-col gap-y-3 px-2 laptop:w-full laptop:flex-row laptop:justify-center laptop:gap-x-3">
+    <div className="mx-auto flex h-[70vh] flex-col gap-y-3 laptop:w-full laptop:flex-row laptop:justify-center laptop:gap-x-3">
       <Playlist
         title={PlaylistName}
         songs={PlSongs}
