@@ -23,10 +23,8 @@ jobs:
           cache: "pip"
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - name: Install prettier plugins
-        run: npm install -D prettier prettier-plugin-tailwindcss
-      - uses: pre-commit/action@v3.0.1
+          node-version: 24
+      - uses: j178/prek-action@v1
 
   tests-unit-frontend:
     name: run unit test for frontend
