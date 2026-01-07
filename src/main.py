@@ -16,7 +16,6 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasicCredentials
-from fastapi.templating import Jinja2Templates
 from starlette.staticfiles import StaticFiles
 
 from backend.app.auth import check_credentials, security
@@ -30,8 +29,6 @@ from backend.app.task_handler import (
 
 IGNORE_CORS = os.getenv("IGNORE_CORS", "False") in ["1", "True", "true"]
 ASSETS_DIR = "src/frontend/dist/assets"
-
-templates = Jinja2Templates(directory="src/frontend/templates")
 
 
 setup_logging(

@@ -19,11 +19,9 @@
     "titleBar.inactiveForeground": "#15202b99",
     "commandCenter.border": "#15202b99"
   },
-  "peacock.color": "#42b883",
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
   },
-  "python.linting.enabled": false,
   "python.testing.pytestArgs": [
     ".",
     "--color=yes",

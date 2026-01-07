@@ -32,7 +32,6 @@ RUN --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
 COPY ["src/main.py", "./main.py"]
 COPY ["src/backend", "./backend"]
 COPY ["src/configs", "./configs"]
-COPY ["src/frontend/templates", "./frontend/templates"]
 COPY --from=frontend ["/frontend/dist", "./src/frontend/dist"]
 
 EXPOSE 8000

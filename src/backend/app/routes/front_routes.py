@@ -9,7 +9,6 @@ import spotipy
 import structlog  # type: ignore
 from fastapi import APIRouter, Request, status
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 
 ### pydantic
 from pydantic import BaseModel
@@ -29,7 +28,6 @@ class UserData(BaseModel):
 
 ###
 REDIRECT_URI: str = os.environ["SPOTIPY_REDIRECT_URL"]
-templates = Jinja2Templates(directory="src/frontend/templates")
 
 router = APIRouter(tags=["Frontend"])
 
