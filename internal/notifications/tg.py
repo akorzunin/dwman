@@ -1,6 +1,5 @@
 import requests
 import structlog
-
 from backend.settings import TG_BOT_TOKEN
 
 log = structlog.stdlib.get_logger(__name__)

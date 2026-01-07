@@ -6,9 +6,6 @@ from typing import Literal, Optional
 import schedule
 import spotipy
 import structlog
-from pydantic import ValidationError
-from tinydb import where
-
 from backend.app import shemas
 from backend.app.db_connector import users
 from backend.app.dw_save_algoritm import get_pl_name, save_playlist_algorithm
@@ -19,6 +16,8 @@ from backend.app.mail_handle import (
 )
 from backend.app.utils import get_access_token
 from backend.notifications.tg import send_telegram_notification
+from pydantic import ValidationError
+from tinydb import where
 
 logger = structlog.stdlib.get_logger(__name__)
 

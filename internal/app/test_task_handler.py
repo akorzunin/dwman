@@ -1,13 +1,12 @@
 from unittest import mock
 
 import pytest
-from tinydb import TinyDB
-from tinydb.storages import MemoryStorage
-
 from backend.app import shemas
 from backend.app.crud import create_user
 from backend.settings import TG_LIVE_TEST, TG_LIVE_TEST_CHAT_ID
 from src.backend.app.task_handler import send_notifications_task
+from tinydb import TinyDB
+from tinydb.storages import MemoryStorage
 
 
 @pytest.fixture

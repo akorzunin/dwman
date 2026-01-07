@@ -1,8 +1,7 @@
 from datetime import datetime, timezone
 
-from tinydb import TinyDB, where
-
 from backend.app import shemas
+from tinydb import TinyDB, where
 
 
 def get_all_users(
