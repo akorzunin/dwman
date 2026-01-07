@@ -575,7 +575,8 @@ export declare namespace SpotifyApi {
    * GET /v1/me/player/recently-played
    * https://developer.spotify.com/web-api/get-users-top-artists-and-tracks/
    */
-  interface UsersRecentlyPlayedTracksResponse extends CursorBasedPagingObject<PlayHistoryObject> {}
+  interface UsersRecentlyPlayedTracksResponse
+    extends CursorBasedPagingObject<PlayHistoryObject> {}
 
   /**
    * Add an item to the end of the user’s current playback queue.
@@ -691,8 +692,7 @@ export declare namespace SpotifyApi {
    * https://developer.spotify.com/web-api/search-item/
    */
   interface SearchResponse
-    extends
-      Partial<ArtistSearchResponse>,
+    extends Partial<ArtistSearchResponse>,
       Partial<AlbumSearchResponse>,
       Partial<TrackSearchResponse>,
       Partial<PlaylistSearchResponse>,
@@ -775,7 +775,8 @@ export declare namespace SpotifyApi {
    * GET /v1/users/{user_id}/playlists
    * https://developer.spotify.com/web-api/get-list-users-playlists/
    */
-  interface ListOfUsersPlaylistsResponse extends PagingObject<PlaylistObjectSimplified> {}
+  interface ListOfUsersPlaylistsResponse
+    extends PagingObject<PlaylistObjectSimplified> {}
 
   /**
    * Get a list of the current user's playlists
@@ -783,7 +784,8 @@ export declare namespace SpotifyApi {
    * GET /v1/me/playlists
    * https://developer.spotify.com/web-api/get-list-users-playlists/
    */
-  interface ListOfCurrentUsersPlaylistsResponse extends PagingObject<PlaylistObjectSimplified> {}
+  interface ListOfCurrentUsersPlaylistsResponse
+    extends PagingObject<PlaylistObjectSimplified> {}
 
   /**
    * Get a playlist
@@ -823,7 +825,8 @@ export declare namespace SpotifyApi {
    * https://developer.spotify.com/web-api/change-playlist-details/
    * @deprecated Use `ChangePlaylistDetailsResponse` instead
    */
-  interface ChangePlaylistDetailsReponse extends ChangePlaylistDetailsResponse {}
+  interface ChangePlaylistDetailsReponse
+    extends ChangePlaylistDetailsResponse {}
 
   /**
    * Add Tracks to a Playlist
@@ -871,7 +874,8 @@ export declare namespace SpotifyApi {
    * https://developer.spotify.com/web-api/upload-a-custom-playlist-cover-image/
    * @deprecated Use `UploadCustomPlaylistCoverImageResponse` instead
    */
-  interface UploadCustomPlaylistCoverImageReponse extends UploadCustomPlaylistCoverImageResponse {}
+  interface UploadCustomPlaylistCoverImageReponse
+    extends UploadCustomPlaylistCoverImageResponse {}
 
   /**
    * Check if Users Follow a Playlist
@@ -894,7 +898,8 @@ export declare namespace SpotifyApi {
   }
 
   interface CurrentPlaybackResponse
-    extends CurrentlyPlayingObject, PlaybackObject {}
+    extends CurrentlyPlayingObject,
+      PlaybackObject {}
 
   interface CurrentlyPlayingResponse extends CurrentlyPlayingObject {}
 
@@ -1384,10 +1389,8 @@ export declare namespace SpotifyApi {
    * Recommendation Album Object
    * Uses the same object structure as Simple Album Object, but with `album_type` in caps.
    */
-  interface RecommendationAlbumObject extends Omit<
-    AlbumObjectSimplified,
-    'album_type'
-  > {
+  interface RecommendationAlbumObject
+    extends Omit<AlbumObjectSimplified, 'album_type'> {
     /**
      * The type of the album: one of “ALBUM”, “SINGLE”, or “COMPILATION”.
      * Note that this differs from the types returned by all other spotify APIs by being in all caps.

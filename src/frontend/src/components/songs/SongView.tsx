@@ -29,7 +29,7 @@ const SongView: React.FC<{ song: Song }> = ({ song }) => {
           <TooltipPositioner>
             <TooltipContent className="text-base">
               <p>{song.name}</p>
-              <p className=" opacity-80">
+              <p className="opacity-80">
                 {song.artists.map((artist) => artist).join(', ')}
               </p>
             </TooltipContent>
