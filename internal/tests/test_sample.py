@@ -1,4 +1,4 @@
-from intewrnal.app.utils import encode_b64
+from internal.app.utils import encode_b64
 
 
 def test_encode():
