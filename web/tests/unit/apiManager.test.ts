@@ -2,12 +2,12 @@ import { expect, test } from 'vitest';
 import dayjs from 'dayjs';
 import { vi } from 'vitest';
 
-import { generatePlData } from '../../../src/frontend/src/utils/apiManager';
+import { generatePlData } from '../../../web/src/utils/apiManager';
 import {
   getTimeData,
   getWeekNumber,
   TimeData,
-} from '../../../src/frontend/src/utils/timeMangment';
+} from '../../../web/src/utils/timeMangment';
 
 const testWithTime = test.extend({
   testTime: async ({}, use) => {

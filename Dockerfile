@@ -3,10 +3,10 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable pnpm
 WORKDIR /frontend
-COPY ["src/frontend/package.json", "./"]
-COPY ["src/frontend/pnpm-lock.yaml", "./"]
+COPY ["web/package.json", "./"]
+COPY ["web/pnpm-lock.yaml", "./"]
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
-COPY ["src/frontend", "./"]
+COPY ["web", "./"]
 RUN pnpm run build
 
 FROM python:3.11-slim AS runner
@@ -29,10 +29,9 @@ RUN --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --frozen --no-cache
 
 # Creating folders, and files for a project:
-COPY ["src/main.py", "./main.py"]
-COPY ["src/backend", "./backend"]
-COPY ["src/configs", "./configs"]
-COPY --from=frontend ["/frontend/dist", "./src/frontend/dist"]
+COPY ["main.py", "./main.py"]
+COPY ["internal", "./internal"]
+COPY --from=frontend ["/frontend/dist", "./web/dist"]
 
 EXPOSE 8000
 

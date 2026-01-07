@@ -7,12 +7,13 @@ from urllib.parse import urlencode
 import requests
 import spotipy
 import structlog  # type: ignore
-from configs.scope import scope_str
 from fastapi import APIRouter, Request, status
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
 ### pydantic
 from pydantic import BaseModel
+
+from internal.scope import scope_str
 
 logger = structlog.stdlib.get_logger(__name__)
 
@@ -38,12 +39,12 @@ async def root():
 
 @router.get("/favicon.ico")
 async def favicon():
-    return FileResponse("./src/frontend/dist/assets/play-arrow-BOYszNJp.png")
+    return FileResponse("./web/dist/assets/play-arrow-BOYszNJp.png")
 
 
 @router.get("/app/{_:path}")
 async def react_path():
-    return FileResponse("./src/frontend/dist/index.html")
+    return FileResponse("./web/dist/index.html")
 
 
 @router.get(

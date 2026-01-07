@@ -10,14 +10,6 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import structlog
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from backend.app.auth import check_credentials, security
-from backend.app.logger import setup_logging, setup_uvicorn_logging
-from backend.app.routes.api_routes import router as api_routes
-from backend.app.routes.front_routes import router as front_routes
-from backend.app.routes.proxy_routes import router as proxy_routes
-from backend.app.task_handler import (
-    send_notifications_task,
-)
 from fastapi import Depends, FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -26,8 +18,17 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasicCredentials
 from starlette.staticfiles import StaticFiles
 
+from internal.app.auth import check_credentials, security
+from internal.app.logger import setup_logging, setup_uvicorn_logging
+from internal.app.routes.api_routes import router as api_routes
+from internal.app.routes.front_routes import router as front_routes
+from internal.app.routes.proxy_routes import router as proxy_routes
+from internal.app.task_handler import (
+    send_notifications_task,
+)
+
 IGNORE_CORS = os.getenv("IGNORE_CORS", "False") in ["1", "True", "true"]
-ASSETS_DIR = "src/frontend/dist/assets"
+ASSETS_DIR = "web/dist/assets"
 
 
 setup_logging(

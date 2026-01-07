@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 import {
   getTimeData,
   getWeekNumber,
-} from '../../../src/frontend/src/utils/timeMangment';
+} from '../../../web/src/utils/timeMangment';
 
 test('getWeekNumber', async () => {
   const currentDate = dayjs('1970-01-01');

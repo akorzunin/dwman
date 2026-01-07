@@ -13,7 +13,7 @@ async def send_email(email: str, subject: str, mail_text: str):
 
 def render_notification_text(dw_link, user_id):
     return render_template(
-        "src/frontend/templates/mail_notify.html",
+        "web/templates/mail_notify.html",
         {
             "dw_link": dw_link,
             "host": "https://dwman.akorz-sw1.duckdns.org/",
@@ -24,7 +24,7 @@ def render_notification_text(dw_link, user_id):
 
 def render_save_pl_text(dw_link, user_id):
     return render_template(
-        "src/frontend/templates/mail_save_pl.html",
+        "web/templates/mail_save_pl.html",
         {
             "dw_link": dw_link,
             "host": "https://dwman.akorz-sw1.duckdns.org/",

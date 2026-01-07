@@ -1,7 +1,8 @@
 from unittest.mock import patch
 
 import pytest
-from backend.settings import TG_LIVE_TEST, TG_LIVE_TEST_CHAT_ID
+
+from internal.settings import TG_LIVE_TEST, TG_LIVE_TEST_CHAT_ID
 
 from .tg import send_telegram_notification
 

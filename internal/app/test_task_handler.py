@@ -1,12 +1,13 @@
 from unittest import mock
 
 import pytest
-from backend.app import shemas
-from backend.app.crud import create_user
-from backend.settings import TG_LIVE_TEST, TG_LIVE_TEST_CHAT_ID
-from src.backend.app.task_handler import send_notifications_task
 from tinydb import TinyDB
 from tinydb.storages import MemoryStorage
+
+from internal.app import shemas
+from internal.app.crud import create_user
+from internal.app.task_handler import send_notifications_task
+from internal.settings import TG_LIVE_TEST, TG_LIVE_TEST_CHAT_ID
 
 
 @pytest.fixture
@@ -14,7 +15,7 @@ def mock_user_table():
     db = TinyDB(storage=MemoryStorage)
     users = db.table("users")
     with mock.patch(
-        "src.backend.app.task_handler.users",
+        "internal.app.task_handler.users",
         new=users,
     ) as users_table:
         yield users_table
@@ -28,7 +29,7 @@ def setup_user(mock_user_table):
             user_id="test_user",
             email="test@test.com",
             send_mail=True,
-            send_time="1973-01-07 14:00:00+00:00",
+            send_time="1973-01-07 14:00:00+00:00",  # type: ignore
             is_premium=False,
             refresh_token="test_refresh_token",
             tg_chat_id=TG_LIVE_TEST_CHAT_ID if TG_LIVE_TEST else "123123123",

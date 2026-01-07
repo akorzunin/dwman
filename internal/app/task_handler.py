@@ -6,18 +6,19 @@ from typing import Literal, Optional
 import schedule
 import spotipy
 import structlog
-from backend.app import shemas
-from backend.app.db_connector import users
-from backend.app.dw_save_algoritm import get_pl_name, save_playlist_algorithm
-from backend.app.mail_handle import (
+from pydantic import ValidationError
+from tinydb import where
+
+from internal.app import shemas
+from internal.app.db_connector import users
+from internal.app.dw_save_algoritm import get_pl_name, save_playlist_algorithm
+from internal.app.mail_handle import (
     render_notification_text,
     render_save_pl_text,
     send_email,
 )
-from backend.app.utils import get_access_token
-from backend.notifications.tg import send_telegram_notification
-from pydantic import ValidationError
-from tinydb import where
+from internal.app.utils import get_access_token
+from internal.notifications.tg import send_telegram_notification
 
 logger = structlog.stdlib.get_logger(__name__)
 
@@ -40,6 +41,8 @@ async def send_notifications_task(time_overrides: dict | None = None):
     for db_user in users_to_nofify:
         try:
             user = shemas.User(**db_user)
+            if not user.send_time:
+                raise ValueError("User send_time is not set")
             send_time = datetime.strptime(user.send_time, "%Y-%m-%d %H:%M:%S%z")
 
             if (

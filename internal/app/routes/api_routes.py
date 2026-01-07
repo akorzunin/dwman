@@ -1,19 +1,20 @@
 from typing import Literal
 
 import structlog
-from backend.app import crud, shemas
-from backend.app.auth import check_credentials, security
-from backend.app.db_connector import UsersTable
-from backend.app.task_handler import (
-    manage_user_tasks,
-    send_notification,
-    send_notifications_task,
-)
-from backend.app.utils import get_access_token
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasicCredentials
 from pydantic import BaseModel
+
+from internal.app import crud, shemas
+from internal.app.auth import check_credentials, security
+from internal.app.db_connector import UsersTable
+from internal.app.task_handler import (
+    manage_user_tasks,
+    send_notification,
+    send_notifications_task,
+)
+from internal.app.utils import get_access_token
 
 router = APIRouter(
     prefix="/api",

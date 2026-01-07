@@ -9,7 +9,7 @@ docker.env
 **/.env.prod
 bun.lockb
 **/package-lock.json
-!src/frontend/.env.prod
+!web/.env.prod
 
 **/node_modules/
 # Byte-compiled / optimized / DLL files
@@ -141,8 +141,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-src/frontend/src/components/index.ts
+web/src/components/index.ts
 usr_data.json
-src/frontend/static/images/Ai_Nav.png
+web/static/images/Ai_Nav.png
 data/db.json
 .aider*

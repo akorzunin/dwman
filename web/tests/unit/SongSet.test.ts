@@ -1,7 +1,7 @@
 // playwright unit test
 import { expect, test } from 'vitest';
-import { SongSet } from '../../../src/frontend/src/utils/songSet';
-import { Song } from '../../../src/frontend/src/interfaces/Song';
+import { SongSet } from '../../../web/src/utils/songSet';
+import { Song } from '../../../web/src/interfaces/Song';
 
 const songs: Song[] = [
   {

@@ -5,7 +5,7 @@ import {
   parseFormTime,
   parseUserSaveTime,
   parseUserWeekDay,
-} from '../../../src/frontend/src/utils/dbManager';
+} from '../../../web/src/utils/dbManager';
 
 test('parseFormTime', () => {
   const testTime = '16:23';

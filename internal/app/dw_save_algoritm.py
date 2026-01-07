@@ -2,8 +2,8 @@ import asyncio
 from datetime import date, datetime, timezone
 from typing import Optional
 
-from backend.app.shemas import SavePlUser
-from backend.app.types import DeviceId, Song
+from internal.app.shemas import SavePlUser
+from internal.app.types import DeviceId, Song
 
 
 def all_dw_songs(

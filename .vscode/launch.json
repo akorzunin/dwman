@@ -22,7 +22,7 @@
       "request": "launch",
       "name": "Launch Chrome against vite dev server",
       "url": "https://test-dwman.localhost",
-      "webRoot": "${workspaceFolder}/src/frontend",
+      "webRoot": "${workspaceFolder}/web",
       "userDataDir": "Debug",
       "runtimeArgs": ["--profile-directory=debug-profile"]
     },

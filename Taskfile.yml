@@ -20,7 +20,7 @@ tasks:
   pnpm-install:
     interactive: true
     desc: Install pnpm dependencies
-    dir: '{{ .EXEC_DIR| default "src/frontend" }}'
+    dir: '{{ .EXEC_DIR| default "web" }}'
     cmds:
       - pnpm i
     preconditions:
@@ -31,7 +31,7 @@ tasks:
     internal: true
     env:
       VITE_API_URL: "{{ .VITE_API_URL }}"
-    dir: src/frontend
+    dir: web
     deps:
       - pnpm-install
     interactive: true
@@ -68,7 +68,7 @@ tasks:
     env:
       LOG_LEVEL: ERROR
     cmds:
-      - uv run python -m uvicorn src.main:app --reload --log-level error --no-access-log
+      - uv run python -m uvicorn main:app --reload --log-level error --no-access-log
 
   debug-full:
     aliases:
@@ -92,7 +92,7 @@ tasks:
     aliases:
       - bw
     desc: Build frontend application
-    dir: src/frontend
+    dir: web
     deps:
       - pnpm-install
     cmds:
@@ -113,8 +113,8 @@ tasks:
     deps:
       - task: pnpm-install
         vars:
-          EXEC_DIR: tests/frontend
-    dir: tests/frontend
+          EXEC_DIR: web/tests
+    dir: web/tests
     cmd: pnpm run test-unit
 
   test-all:
