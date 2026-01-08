@@ -14,8 +14,8 @@ services:
       - ./data:/app/data:rw
   caddy:
     image: caddy:2-alpine
-    env_file:
-      - .env
+    environment:
+      - DOMAIN=test-dwman.localhost
     restart: unless-stopped
     ports:
       - "80:80"

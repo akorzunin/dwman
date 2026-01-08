@@ -10,6 +10,7 @@ docker.env
 bun.lockb
 **/package-lock.json
 !web/.env.prod
+.ansible
 
 **/node_modules/
 # Byte-compiled / optimized / DLL files
