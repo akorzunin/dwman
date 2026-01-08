@@ -97,7 +97,10 @@ async def login_url(
             )
         ),
     )
-    return RedirectResponse(r.prepare().url)
+    url = r.prepare().url
+    if not url:
+        raise ValueError("Could not generate login url")
+    return RedirectResponse(url)
 
 
 @router.get(

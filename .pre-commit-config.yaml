@@ -25,7 +25,17 @@ repos:
             --ignore-missing-imports,
             --explicit-package-bases,
           ]
-        additional_dependencies: ["types-requests"]
+        additional_dependencies:
+          - spotipy
+          - uvicorn
+          - pydantic
+          - tinydb
+          - apscheduler
+          - fastapi
+          - structlog
+          - httpx
+          - types-requests
+
   - repo: https://github.com/rbubley/mirrors-prettier
     rev: v3.7.4
     hooks:

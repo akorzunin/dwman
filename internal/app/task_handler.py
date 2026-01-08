@@ -140,7 +140,7 @@ def manage_user_tasks(user: shemas.User) -> Optional[shemas.Message]:
         get_tag(user.user_id, "notify"),
     ):
         # create notify task if task is not exists
-        task = user_notify_task(user)
+        task = user_notify_task(user)  # type: ignore
         logger.info(
             f"[New Notify Task] Next run: {str(task.next_run)} "
             f"User: {user.user_id}"
@@ -149,7 +149,7 @@ def manage_user_tasks(user: shemas.User) -> Optional[shemas.Message]:
         get_tag(user.user_id, "save"),
     ):
         # create user save task if task is not exists
-        task = user_save_task(user)
+        task = user_save_task(user)  # type: ignore
         logger.info(
             f"[New Save Task] Next run: {str(task.next_run)} "
             f"User: {user.user_id}"

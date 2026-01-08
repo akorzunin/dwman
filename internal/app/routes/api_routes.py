@@ -49,7 +49,7 @@ async def test_notification(msg: UserEmail, users: UsersTable):
     try:
         user = crud.get_user_by_tg_chat_id(users, msg.tg_chat_id)
     except Exception as e:
-        logger.exception(e)
+        logger.exception(str(e))
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
             content={"message": "User not found"},
@@ -129,7 +129,7 @@ async def update_user(user: shemas.UpdateUser, user_id: str, users: UsersTable):
             content={"message": str(e)},
         )
     if message := manage_user_tasks(updated_user):
-        logger.warning(message.model_dump())
+        logger.warning(str(message.model_dump()))
     return updated_user
 
 

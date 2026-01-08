@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from tinydb import TinyDB, where
+from tinydb.table import Table
 
 from internal.app import shemas
 
@@ -36,7 +37,7 @@ def create_user(db, user: shemas.CreateUser) -> shemas.User:
 
 
 def update_user(
-    db: TinyDB,
+    db: TinyDB | Table,
     user: shemas.UpdateUser,
     user_id: str,
 ) -> shemas.User:
@@ -47,7 +48,7 @@ def update_user(
     }:
         db.update(user_upd, where("user_id") == user_id)
         user_doc = db.get(where("user_id") == user_id)
-        return shemas.User(**user_doc)
+        return shemas.User(**user_doc)  # type: ignore
     raise ValueError("Could not update user")
 
 

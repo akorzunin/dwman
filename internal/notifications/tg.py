@@ -18,6 +18,6 @@ def send_telegram_notification(chat_id: str | None, message: str):
         response = requests.post(url, data=data)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
-        log.exception(e)
+        log.exception(str(e))
         return e
     return None

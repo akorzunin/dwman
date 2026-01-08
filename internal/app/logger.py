@@ -131,7 +131,7 @@ def setup_uvicorn_logging(
             )
         finally:
             process_time = str((time.perf_counter_ns() - start_time) / 10**9)
-            url = get_path_with_query_string(request.scope)
+            url = get_path_with_query_string(request.scope)  # type: ignore
             access_logger.info(
                 f"{request.method} {url} HTTP/{request.scope['http_version']} {response.status_code}",
                 http={
@@ -142,8 +142,8 @@ def setup_uvicorn_logging(
                 headers={"X-Process-Time": process_time},
                 network={
                     "client": {
-                        "ip": request.client.host,
-                        "port": request.client.port,
+                        "ip": request.client.host,  # type: ignore
+                        "port": request.client.port,  # type: ignore
                     }
                 },
             )

@@ -100,7 +100,7 @@ if __name__ == "__main__":
         app="main:app",
         host="0.0.0.0",
         port=int(os.getenv("UVICORN_PORT", "8000")),
-        loop=loop,
+        loop=loop,  # type: ignore
     )
     _ = loop.create_task(uvicorn.Server(config).serve())
 
