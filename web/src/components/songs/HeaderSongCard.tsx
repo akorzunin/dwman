@@ -22,7 +22,7 @@ const SongCard: FC<ISongCard> = ({ song, isHidden, isAddable, className }) => {
   return (
     <div
       className={cn(
-        'flex items-center justify-between rounded-md border-2 border-solid px-4 py-2 text-primary-foreground tablet:flex tablet:w-[320px] desktop:w-[380px]',
+        'flex items-center justify-between rounded-md border-2 border-solid px-4 py-2 text-primary-foreground laptop:w-[380px]',
         isHidden && 'hidden',
         className
       )}
