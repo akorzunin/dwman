@@ -1,24 +1,11 @@
-import { useState } from 'react';
 import { Html } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
 
 const TitleText = () => {
-  const [theta, setTheta] = useState(0);
-  const radius = 0.1;
-  const speed = 0.01;
-
-  useFrame(() => {
-    setTheta((prevTheta) => prevTheta - speed);
-  });
-
   return (
-    <Html
-      position={[Math.cos(theta) * radius, Math.sin(theta) * radius + 0.2, 0]}
-      transform
-    >
-      <div className="text-xl font-bold text-white transition-all duration-100 hover:cursor-pointer">
-        Save DW
-      </div>
+    <Html zIndexRange={[10]} center>
+      <p className="text-xl font-bold text-primary-foreground hover:cursor-pointer">
+        Save&nbsp;DW
+      </p>
     </Html>
   );
 };

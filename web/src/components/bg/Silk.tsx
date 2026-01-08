@@ -7,6 +7,7 @@ import { ThemeValues, useTheme } from '../../shadcn/ui/theme-provider';
 
 import vertexShader from './silk.vert';
 import fragmentShader from './silk.frag';
+import { Center } from '@react-three/drei';
 
 const colorMap: Record<ThemeValues, Color> = {
   light: new Color('rgb(125, 211, 252)'),
@@ -53,7 +54,9 @@ const Silk = () => {
   return (
     <div className="h-[300px] w-[300px] overflow-hidden rounded-full">
       <Canvas>
-        <TitleText />
+        <Center>
+          <TitleText />
+        </Center>
         <SilkPlane />
       </Canvas>
     </div>
