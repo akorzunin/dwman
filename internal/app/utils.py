@@ -1,7 +1,8 @@
 import base64
-import os
 
 import requests
+
+from internal.settings import SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET
 
 
 def encode_b64(client_id: str, client_secret: str) -> str:
@@ -11,11 +12,6 @@ def encode_b64(client_id: str, client_secret: str) -> str:
 
 
 def get_access_token(refresh_token: str) -> dict:
-    client_creds_b64 = encode_b64(
-        os.environ["SPOTIPY_CLIENT_ID"],
-        os.environ["SPOTIPY_CLIENT_SECRET"],
-    )
-
     return requests.post(
         url="https://accounts.spotify.com/api/token",
         data={
@@ -23,7 +19,7 @@ def get_access_token(refresh_token: str) -> dict:
             "refresh_token": refresh_token,
         },
         headers={
-            "Authorization": f"Basic {client_creds_b64}",
+            "Authorization": f"Basic {encode_b64(SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET)}",
             "Content-Type": "application/x-www-form-urlencoded",
         },
     ).json()

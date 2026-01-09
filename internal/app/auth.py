@@ -1,8 +1,9 @@
-import os
 import secrets
 
 from fastapi import HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+
+from internal.settings import API_LOGIN, API_PASSWORD
 
 security = HTTPBasic()
 
@@ -10,11 +11,11 @@ security = HTTPBasic()
 def check_credentials(credentials: HTTPBasicCredentials) -> bool:
     correct_username = secrets.compare_digest(
         credentials.username,
-        os.getenv("API_LOGIN", "admin"),
+        API_LOGIN,
     )
     correct_password = secrets.compare_digest(
         credentials.password,
-        os.getenv("API_PASSWORD", "admin"),
+        API_PASSWORD,
     )
     if not (correct_username and correct_password):
         raise HTTPException(

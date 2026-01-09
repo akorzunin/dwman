@@ -1,12 +1,8 @@
 """Main app for Spotify DW saver web server"""
 
 import asyncio
-import os
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent))
 
 import structlog
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -26,15 +22,11 @@ from internal.app.routes.proxy_routes import router as proxy_routes
 from internal.app.task_handler import (
     send_notifications_task,
 )
-
-IGNORE_CORS = os.getenv("IGNORE_CORS", "False") in ["1", "True", "true"]
-ASSETS_DIR = "web/dist/assets"
-
+from internal.settings import IGNORE_CORS, JSON_LOGS, LOG_LEVEL, UVICORN_PORT
 
 setup_logging(
-    json_logs=os.getenv("JSON_LOGS", str(not sys.stdout.isatty()))
-    in ["1", "True", "True"],
-    log_level=os.getenv("LOG_LEVEL", "INFO"),
+    json_logs=JSON_LOGS,
+    log_level=LOG_LEVEL,
 )
 access_logger = structlog.stdlib.get_logger("api.access")
 # log = structlog.stdlib.get_logger(__name__)
@@ -71,6 +63,8 @@ async def health():
     )
 
 
+ASSETS_DIR = "web/dist/assets"
+
 Path(ASSETS_DIR).mkdir(parents=True, exist_ok=True)
 app.mount(
     "/assets",
@@ -99,7 +93,7 @@ if __name__ == "__main__":
     config = uvicorn.Config(
         app="main:app",
         host="0.0.0.0",
-        port=int(os.getenv("UVICORN_PORT", "8000")),
+        port=UVICORN_PORT,
         loop=loop,  # type: ignore
     )
     _ = loop.create_task(uvicorn.Server(config).serve())

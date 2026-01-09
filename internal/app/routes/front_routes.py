@@ -1,4 +1,3 @@
-import os
 from datetime import datetime
 from random import randint
 from typing import Literal
@@ -14,6 +13,11 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from pydantic import BaseModel
 
 from internal.scope import scope_str
+from internal.settings import (
+    SPOTIPY_CLIENT_ID,
+    SPOTIPY_CLIENT_SECRET,
+    SPOTIPY_REDIRECT_URL,
+)
 
 logger = structlog.stdlib.get_logger(__name__)
 
@@ -25,9 +29,6 @@ class UserData(BaseModel):
     refresh_token: str
     scope: str
 
-
-###
-REDIRECT_URI: str = os.environ["SPOTIPY_REDIRECT_URL"]
 
 router = APIRouter(tags=["Frontend"])
 
@@ -64,7 +65,7 @@ def new_state() -> str:
 
 def get_redirect_url(referer: str | None) -> str:
     if not referer:
-        return REDIRECT_URI
+        return SPOTIPY_REDIRECT_URL
     method, url = referer.split("//")
     redirect_uri = method + "//" + url.split("/")[0]
     return f"{redirect_uri}/get_token"
@@ -77,10 +78,12 @@ def get_redirect_url(referer: str | None) -> str:
 )
 async def login_url(
     req: Request,
-    state: str = new_state(),
+    state: str | None = None,
     show_dialog: Literal["true", "false"] = "false",
 ):
     """Redirect to Spotify login page"""
+    if not state:
+        state = new_state()
     redirect_uri = get_redirect_url(req.headers.get("Referer"))
     logger.info(f"Redirecting to login page from {redirect_uri}")
     r = requests.Request(
@@ -89,7 +92,7 @@ async def login_url(
         + urlencode(
             dict(
                 response_type="code",
-                client_id=os.getenv("SPOTIPY_CLIENT_ID"),
+                client_id=SPOTIPY_CLIENT_ID,
                 scope=scope_str,
                 redirect_uri=redirect_uri,
                 state=state,
@@ -125,8 +128,8 @@ async def get_token(req: Request, code: str, redirect: bool = True):
             "grant_type": "authorization_code",
             "code": code,
             "redirect_uri": redirect_uri,
-            "client_id": os.getenv("SPOTIPY_CLIENT_ID"),
-            "client_secret": os.getenv("SPOTIPY_CLIENT_SECRET"),
+            "client_id": SPOTIPY_CLIENT_ID,
+            "client_secret": SPOTIPY_CLIENT_SECRET,
         },
     ).json()
     logger.info(f"REDIRECT {redirect_uri}")
