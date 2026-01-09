@@ -32,23 +32,23 @@ interface TestTime {
 }
 
 testWithTime('generatePlData default', async ({ testTimeData }: TestTime) => {
-  const plData = await generatePlData(undefined, undefined, testTimeData);
+  const plData = await generatePlData({ date: testTimeData });
   expect(plData.name).toBeDefined();
   expect(plData.description).toBeDefined();
 });
 
 testWithTime('generatePlData custom', async ({ mockDate }: TestTime) => {
-  const plData = await generatePlData(
-    'test_{year}_{week}',
-    'test description {created}'
-  );
+  const plData = await generatePlData({
+    name: 'test_{year}_{week}',
+    description: 'test description {created}',
+  });
 
   expect(plData.name).toBe('test_1970_1');
   expect(plData.description).toBe('test description 1970-01-01 00:00:00');
 });
 
 testWithTime('generatePlData empty', async ({ mockDate }: TestTime) => {
-  const plData = await generatePlData('', '');
+  const plData = await generatePlData({});
 
   expect(plData.name).toBe('1970_1');
   expect(plData.description).toBe(
@@ -59,9 +59,8 @@ testWithTime('generatePlData empty', async ({ mockDate }: TestTime) => {
 testWithTime(
   'generatePlData template items',
   async ({ mockDate }: TestTime) => {
-    const plData = await generatePlData(
-      '',
-      `{year}
+    const plData = await generatePlData({
+      description: `{year}
 {month}
 {week}
 {day}
@@ -71,19 +70,17 @@ testWithTime(
 {songs_num}
 {repo_url}
 `,
-      undefined,
-      {
-        songs: [
-          {
-            name: 'test',
-            artists: ['test'],
-            uri: 'test',
-            imgUrl: 'test',
-          },
-        ],
-        kaomoji: 'ಠ_ಠ',
-      }
-    );
+
+      songs: [
+        {
+          name: 'test',
+          artists: ['test'],
+          uri: 'test',
+          imgUrl: 'test',
+        },
+      ],
+      kaomoji: 'ಠ_ಠ',
+    });
 
     expect(plData.description).toBe(
       `1970

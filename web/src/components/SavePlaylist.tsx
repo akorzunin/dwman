@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { saveUserPl } from '../utils/apiManager';
+import { FC, useState } from 'react';
+import { generatePlData, saveUserPl } from '../utils/apiManager';
 import SaveSongPlaylist from './SaveSongPlaylist';
 import PlaylistTitle from './PlaylistTitle';
 import { Button } from '../shadcn/ui/button';
@@ -13,21 +13,23 @@ import {
   PlaylistSongsAtom,
   SongSetAtom,
 } from '../store/store';
-import { fullYear, weekNumber } from '../utils/timeMangment';
 import { cn } from '../lib/utils';
-import { ChevronDown, Trash2 } from 'lucide-react';
+import { ChevronDown, Edit, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  Separator,
 } from '@radix-ui/react-dropdown-menu';
-import { Song } from '../interfaces/Song';
+import { ApiService, User } from '../api/client';
+import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'react-router';
 
 const dotClassName =
   'absolute right-[-6px] top-[-6px] inline-flex h-3 w-3 bg-purple-700';
 
-const SavePlaylist = ({ className }: { className?: string }) => {
+const SavePlaylist: FC<{ className?: string }> = ({ className }) => {
   const [IsSpinning, setIsSpinning] = useState(false);
   const [savePlState, setSavePlState] = useState('Save');
   const [listenPlayback, setListenPlayback] = useAtom(listenPlaybackAtom);
@@ -37,9 +39,35 @@ const SavePlaylist = ({ className }: { className?: string }) => {
   const PlaylistSongs = useAtomValue(PlaylistSongsAtom);
   const currentSongs = useAtomValue(SongSetAtom);
 
-  const playlistName = useAtomValue(PlaylistNameTemplateAtom);
+  const [playlistName, setPlaylistName] = useAtom(PlaylistNameTemplateAtom);
   const playlistDescription = useAtomValue(PlaylistDescriptionTemplateAtom);
   const easterEggKaomoji = useAtomValue(easterEggKaomojiAtom);
+
+  const { userId } = useParams();
+  const plDescriptionQuery = useQuery({
+    queryKey: ['customPlName', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const res = await ApiService.getUserApiUserGet(userId);
+      if (!res.ok) return null;
+      const d: User = await res.json();
+      if (!d.custom_description_pattern) {
+        return null;
+      }
+      setPlaylistName(d.custom_description_pattern);
+    },
+  });
+
+  const currentPlNameQuery = useQuery({
+    queryKey: ['currentPlName'],
+    queryFn: async () => {
+      const pl = await generatePlData({
+        name: playlistName,
+        description: playlistDescription,
+      });
+      return pl.name;
+    },
+  });
 
   const onClear = () => {
     setPingState('hidden');
@@ -47,31 +75,23 @@ const SavePlaylist = ({ className }: { className?: string }) => {
     clrearSongSet();
   };
   type Opts = { full?: boolean; empty?: boolean };
-  const saveUserPlaylist = async (opts?: Opts) => {
+  const saveUserPlaylist = async ({ full, empty }: Opts = {}) => {
     setSavePlState('Saving...');
     setTimeout(() => {
       setSavePlState('Save');
     }, 5000);
-    const PlData = {
+    let songs = currentSongs.items;
+    if (full) {
+      songs = PlaylistSongs;
+    } else if (empty) {
+      songs = [];
+    }
+    const [data, err] = await saveUserPl({
+      songs,
       playlistName,
       playlistDescription,
       kaomoji: easterEggKaomoji,
-    };
-    function getSongs(
-      opts: Opts | undefined,
-      pls: Song[],
-      current: Song[]
-    ): Song[] {
-      if (opts?.full) {
-        return pls;
-      }
-      if (opts?.empty) {
-        return current;
-      }
-      return current;
-    }
-    const songs = getSongs(opts, PlaylistSongs, currentSongs.items);
-    const [data, err] = await saveUserPl(songs, PlData);
+    });
     if (err || data === null) {
       setSavePlState('Error');
       console.error(err);
@@ -89,12 +109,22 @@ const SavePlaylist = ({ className }: { className?: string }) => {
   return (
     <div className={cn('flex w-full flex-col gap-y-3', className)}>
       <div className={IsSpinning ? 'animate-spin' : ''}>
-        <PlaylistTitle
-          title={`Saved playlist: ${fullYear}_${weekNumber}`}
-          isDW={true}
-        />
-        <div className="flex justify-between gap-3 overflow-x-hidden py-2">
-          <div className="relative inline-flex">
+        <div className="flex justify-between">
+          <PlaylistTitle
+            title={`Playlist: ${currentPlNameQuery.data || '...'}`}
+            isDW={true}
+            className="flex-auto rounded-r-none"
+          />
+          <Separator className="h-auto w-0.5" />
+          <Button
+            variant={'secondary'}
+            className="h-auto flex-none rounded-l-none"
+          >
+            <Edit className="h-[1.2rem] w-[1.2rem] text-primary" />
+          </Button>
+        </div>
+        <div className="flex justify-between overflow-x-hidden py-2">
+          <div className="relative flex">
             <Button
               variant="secondary"
               className="rounded-none rounded-l-md"
@@ -102,30 +132,32 @@ const SavePlaylist = ({ className }: { className?: string }) => {
             >
               {savePlState}
             </Button>
-            <span className={cn('flex rounded-full', PingState)}>
-              <span
-                className={cn(
-                  dotClassName,
-                  'animate-ping rounded-full opacity-75'
-                )}
-              ></span>
-              <span className={cn(dotClassName, 'rounded-full')}></span>
-            </span>
+            <Separator className="relative h-auto w-0.5">
+              <span className={cn('flex rounded-full', PingState)}>
+                <span
+                  className={cn(
+                    dotClassName,
+                    'animate-ping rounded-full opacity-75'
+                  )}
+                ></span>
+                <span className={cn(dotClassName, 'rounded-full')}></span>
+              </span>
+            </Separator>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   size="icon"
                   variant="secondary"
-                  className="rounded-none rounded-r-md border-l-2"
+                  className="rounded-none rounded-r-md"
                 >
-                  <ChevronDown className="absolute h-[1.2rem] w-[1.2rem]" />
+                  <ChevronDown className="h-[1.2rem] w-[1.2rem]" />
                   <span className="sr-only">Open menu</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
                 sideOffset={5}
-                className="z-1000 flex w-52 flex-col gap-2 rounded-md bg-secondary bg-opacity-100 p-2 text-primary opacity-100"
+                className="flex w-52 flex-col gap-2 rounded-md bg-secondary bg-opacity-100 p-2 text-primary opacity-100"
               >
                 <DropdownMenuItem>
                   <Button

@@ -113,8 +113,8 @@ tasks:
     deps:
       - task: pnpm-install
         vars:
-          EXEC_DIR: web/tests
-    dir: web/tests
+          EXEC_DIR: web
+    dir: web
     cmd: pnpm run test-unit
 
   test-all:
@@ -135,8 +135,8 @@ tasks:
     deps:
       - task: pnpm-install
         vars:
-          EXEC_DIR: tests/frontend
-    dir: tests/frontend
+          EXEC_DIR: web
+    dir: web
     cmd: pnpm run test-unit-watch
 
   # test-react-frontend:

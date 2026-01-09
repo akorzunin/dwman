@@ -6,7 +6,7 @@ import { Playback } from '../interfaces/Playback';
 import { getSpotifyUrl } from './utils';
 import { getAccessToken } from './auth';
 import { OpenAPI } from '../api/client';
-import { getTimeData } from './timeMangment';
+import { getTimeData, TimeData } from './timeMangment';
 import dayjs from 'dayjs';
 
 const checkStatusCode = (res: Response) => {
@@ -233,10 +233,13 @@ export const getPlayBackSongs = async (
   return [songs, false, currentSong];
 };
 
-const renderTemplate = (
-  template: string,
-  ctx?: { songs: Song[]; kaomoji?: string } | undefined
-) => {
+interface IrenderTemplate {
+  template: string;
+  songs: Song[];
+  kaomoji?: string;
+}
+
+const renderTemplate = ({ template, songs, kaomoji }: IrenderTemplate) => {
   return template.replace(/{([^{}]+)}/g, (_, key) => {
     const d = dayjs();
     switch (key) {
@@ -253,9 +256,9 @@ const renderTemplate = (
       case '<3':
         return '❤️';
       case 'kaomoji':
-        return ctx?.kaomoji || '';
+        return kaomoji || '';
       case 'songs_num':
-        return String(ctx?.songs?.length);
+        return String(songs?.length);
       case 'repo_url':
         return 'https://github.com/akorzunin/dwman';
       default:
@@ -264,20 +267,32 @@ const renderTemplate = (
   });
 };
 
-export const generatePlData = async (
-  name?: string,
-  description?: string,
+export interface IgeneratePlData {
+  name?: string;
+  description?: string;
+  date?: TimeData;
+  songs?: Song[];
+  kaomoji?: string;
+}
+export interface IplData {
+  name: string;
+  description: string;
+}
+export const generatePlData = async ({
+  name = '',
+  description = '',
   date = getTimeData(),
-  ctx?: { songs: Song[]; kaomoji?: string }
-) => {
-  const plData: { name: string; description: string } = {
-    name: '',
-    description: '',
+  songs = [],
+  kaomoji,
+}: IgeneratePlData): Promise<IplData> => {
+  const plData: IplData = {
+    name,
+    description,
   };
   if (!name) {
     plData.name = `${date.fullYear}_${date.weekNumber}`;
   } else {
-    plData.name = renderTemplate(name, ctx);
+    plData.name = renderTemplate({ template: name, songs, kaomoji });
   }
   if (!description) {
     // replace regular space w/ U+205F cause of bug
@@ -286,28 +301,39 @@ export const generatePlData = async (
         .split(' ')
         .join(' ');
   } else {
-    plData.description = renderTemplate(description, ctx).split(' ').join(' ');
+    plData.description = renderTemplate({
+      template: description,
+      songs,
+      kaomoji,
+    })
+      .split(' ')
+      .join(' ');
   }
   return plData;
 };
 
-export interface SavePlOptions {
+export interface IsaveUserPl {
+  songs: Song[];
   playlistName?: string;
   playlistDescription?: string;
   kaomoji?: string;
 }
 
-export const saveUserPl = async (
-  songs: Song[],
-  opts?: SavePlOptions
-): Promise<[SpotifyApi.AddTracksToPlaylistResponse | null, Error | null]> => {
+export const saveUserPl = async ({
+  songs,
+  playlistName,
+  playlistDescription,
+  kaomoji,
+}: IsaveUserPl): Promise<
+  [SpotifyApi.AddTracksToPlaylistResponse | null, Error | null]
+> => {
   // Create new playlist
   const userData = await getUserData();
   const PlData = await generatePlData(
-    opts?.playlistName,
-    opts?.playlistDescription,
+    playlistName,
+    playlistDescription,
     getTimeData(),
-    { songs: songs, kaomoji: opts?.kaomoji }
+    { songs: songs, kaomoji: kaomoji }
   );
   if (!userData.id) {
     return [null, Error('No user id')];
