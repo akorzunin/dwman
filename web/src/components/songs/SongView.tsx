@@ -14,28 +14,26 @@ const SongView: React.FC<{ song: Song }> = ({ song }) => {
         <AvatarImage src={song.imgUrl} className="h-full" alt="song cover" />
         <AvatarFallback className="rounded-none">NA</AvatarFallback>
       </Avatar>
-      <div className="">
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <>
-                <p className="line-clamp-1">{song.name}</p>
-                <p className="line-clamp-1 opacity-80">
-                  {song.artists.map((artist) => artist).join(', ')}
-                </p>
-              </>
-            }
-          ></TooltipTrigger>
-          <TooltipPositioner>
-            <TooltipContent className="text-base">
-              <p>{song.name}</p>
-              <p className="opacity-80">
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <div>
+              <p className="line-clamp-1">{song.name}</p>
+              <p className="line-clamp-1">
                 {song.artists.map((artist) => artist).join(', ')}
               </p>
-            </TooltipContent>
-          </TooltipPositioner>
-        </Tooltip>
-      </div>
+            </div>
+          }
+        ></TooltipTrigger>
+        <TooltipPositioner>
+          <TooltipContent className="text-base">
+            <p>{song.name}</p>
+            <p className="opacity-80">
+              {song.artists.map((artist) => artist).join(', ')}
+            </p>
+          </TooltipContent>
+        </TooltipPositioner>
+      </Tooltip>
     </>
   );
 };
