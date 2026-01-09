@@ -4,7 +4,8 @@
 /* eslint-disable */
 export type User = {
   tg_chat_id?: string | null;
-  custom_description_pattern?: string | null;
+  custom_pl_name_pattern?: string | null;
+  custom_pl_description_pattern?: string | null;
   dw_playlist_id?: string | null;
   save_dw_weekly?: boolean;
   save_full_playlist?: boolean;
@@ -12,7 +13,7 @@ export type User = {
   user_id: string;
   created_at: string;
   send_mail?: boolean;
-  email: string | '' | null;
+  email: string | null;
   send_time: string | null;
   is_premium: boolean;
   refresh_token: string;

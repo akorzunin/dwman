@@ -4,13 +4,14 @@
 /* eslint-disable */
 export type UpdateUser = {
   tg_chat_id?: string | null;
-  custom_description_pattern?: string | null;
+  custom_pl_name_pattern?: string | null;
+  custom_pl_description_pattern?: string | null;
   send_mail?: boolean | null;
-  email?: string | '' | null;
-  send_time?: string | '' | null;
+  email?: string | null;
+  send_time?: string | null;
   is_premium?: boolean | null;
   refresh_token?: string | null;
-  save_time?: string | '' | null;
+  save_time?: string | null;
   dw_playlist_id?: string | null;
   save_dw_weekly?: boolean | null;
   save_full_playlist?: boolean | null;

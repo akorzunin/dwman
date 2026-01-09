@@ -4,11 +4,6 @@
 /* eslint-disable */
 export type SpotifyToken = {
   access_token: string;
-  token_type: SpotifyToken.token_type;
+  token_type: string;
   expires_in: number;
 };
-export namespace SpotifyToken {
-  export enum token_type {
-    BEARER = 'Bearer',
-  }
-}

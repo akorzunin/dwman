@@ -12,7 +12,7 @@ export type { HTTPValidationError } from './models/HTTPValidationError';
 export type { Message } from './models/Message';
 export type { RefreshToken } from './models/RefreshToken';
 export type { SpotifyError } from './models/SpotifyError';
-export { SpotifyToken } from './models/SpotifyToken';
+export type { SpotifyToken } from './models/SpotifyToken';
 export type { UpdateUser } from './models/UpdateUser';
 export type { User } from './models/User';
 export type { UserEmail } from './models/UserEmail';

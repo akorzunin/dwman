@@ -78,13 +78,22 @@ def test_notify_user_ok(client: TestClient):
 
 
 def test_update_user_custome_description(client: TestClient):
-    p = "test_pattern_{year}_{month}_{day}"
+    pl_name = "test_pattern_{year}_{month}_{day}"
+    pl_desc = "test_pattern_desc_{year}_{month}_{day}"
 
-    u = setup_user(client, custom_description_pattern=p).json()
+    u = setup_user(
+        client,
+        custom_pl_name_pattern=pl_name,
+        custom_pl_description_pattern=pl_desc,
+    ).json()
     resp = client.put(
         "/api/update_user",
         params={"user_id": u["user_id"]},
-        json={"custom_description_pattern": p},
+        json={
+            "custom_pl_name_pattern": pl_name,
+            "custom_pl_description_pattern": pl_desc,
+        },
     )
     assert resp.status_code == 200
-    assert resp.json()["custom_description_pattern"] == p
+    assert resp.json()["custom_pl_name_pattern"] == pl_name
+    assert resp.json()["custom_pl_description_pattern"] == pl_desc

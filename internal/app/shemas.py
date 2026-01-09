@@ -24,7 +24,8 @@ class SpotifyError(BaseModel):
 # just add new fields to this class and it will be fine
 class CommonUser(BaseModel):
     tg_chat_id: str | None = None
-    custom_description_pattern: str | None = None
+    custom_pl_name_pattern: str | None = None
+    custom_pl_description_pattern: str | None = None
 
 
 class BaseUser(BaseModel):
