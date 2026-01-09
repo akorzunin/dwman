@@ -3,6 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export type UpdateUser = {
+  tg_chat_id?: string | null;
+  custom_description_pattern?: string | null;
   send_mail?: boolean | null;
   email?: string | '' | null;
   send_time?: string | '' | null;
@@ -13,5 +15,4 @@ export type UpdateUser = {
   save_dw_weekly?: boolean | null;
   save_full_playlist?: boolean | null;
   filter_dislikes?: boolean | null;
-  tg_chat_id?: string | null;
 };

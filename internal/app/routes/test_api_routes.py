@@ -75,3 +75,16 @@ def test_notify_user_ok(client: TestClient):
     )
     assert resp.status_code == 200
     assert resp.json()["message"] == "notification has been sent"
+
+
+def test_update_user_custome_description(client: TestClient):
+    p = "test_pattern_{year}_{month}_{day}"
+
+    u = setup_user(client, custom_description_pattern=p).json()
+    resp = client.put(
+        "/api/update_user",
+        params={"user_id": u["user_id"]},
+        json={"custom_description_pattern": p},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["custom_description_pattern"] == p

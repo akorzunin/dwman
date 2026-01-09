@@ -3,6 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export type CreateUser = {
+  tg_chat_id?: string | null;
+  custom_description_pattern?: string | null;
   dw_playlist_id?: string | null;
   save_dw_weekly?: boolean;
   save_full_playlist?: boolean;
@@ -14,5 +16,4 @@ export type CreateUser = {
   is_premium: boolean;
   refresh_token: string;
   save_time?: string | null;
-  tg_chat_id?: string | null;
 };

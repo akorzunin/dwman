@@ -19,6 +19,14 @@ class SpotifyError(BaseModel):
     error_description: str
 
 
+# New optional fields for user
+# TODO: probably whole module needs to be refactored but for now
+# just add new fields to this class and it will be fine
+class CommonUser(BaseModel):
+    tg_chat_id: str | None = None
+    custom_description_pattern: str | None = None
+
+
 class BaseUser(BaseModel):
     dw_playlist_id: str | None = None
     save_dw_weekly: bool = False
@@ -26,7 +34,7 @@ class BaseUser(BaseModel):
     filter_dislikes: bool = True
 
 
-class User(BaseUser):
+class User(BaseUser, CommonUser):
     user_id: str
     created_at: str
     send_mail: bool = False
@@ -35,7 +43,6 @@ class User(BaseUser):
     is_premium: bool
     refresh_token: str
     save_time: Optional[str]
-    tg_chat_id: str | None = None
 
     @field_validator("send_time", "save_time", "created_at", mode="before")
     def parse_birthdate(cls, value):
@@ -46,7 +53,7 @@ class User(BaseUser):
             return str(value)
 
 
-class CreateUser(BaseUser):
+class CreateUser(BaseUser, CommonUser):
     user_id: str
     send_mail: bool = False
     email: EmailStr | None = None
@@ -54,10 +61,9 @@ class CreateUser(BaseUser):
     is_premium: bool
     refresh_token: str
     save_time: datetime | None = None
-    tg_chat_id: str | None = None
 
 
-class UpdateUser(BaseModel):
+class UpdateUser(CommonUser, BaseModel):
     send_mail: bool | None = None
     email: EmailStr | Literal[""] | None = None
     send_time: datetime | Literal[""] | None = None
@@ -68,7 +74,6 @@ class UpdateUser(BaseModel):
     save_dw_weekly: bool | None = None
     save_full_playlist: bool | None = None
     filter_dislikes: bool | None = None
-    tg_chat_id: str | None = None
 
     @field_validator("send_time", "save_time", mode="after")
     def parse_date(cls, value):
