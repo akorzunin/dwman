@@ -2,44 +2,36 @@
 name = "spotify_dw_api"
 version = "0.1.0"
 description = ""
-authors = [{ name = "WildElaeagnus", email = "54314123+akorzunin@users.noreply.github.com" }]
-requires-python = ">=3.10, <4"
+authors = [
+    { name = "WildElaeagnus", email = "54314123+akorzunin@users.noreply.github.com" },
+]
+requires-python = ">=3.14, <4"
 dependencies = [
     "spotipy>=2.24.0,<3",
-    "python-dotenv>=1.0.1,<2",
-    "uvicorn>=0.31.1,<0.32",
-    "pydantic>=2.9.2,<3",
+    "python-dotenv>=1.2.1,<2",
+    "uvicorn>=0.40.0,<0.41",
     "jinja2>=3.1.4,<4",
     "tinydb>=4.8.2,<5",
     "schedule>=1.2.2,<2",
     "apscheduler>=3.10.4,<4",
-    "fastapi-mail>=1.4.1,<2",
-    "fastapi-sessions>=0.3.2,<0.4",
-    "fastapi>=0.115.2,<0.116",
+    "fastapi>=0.128.0,<0.129",
     "email-validator>=2.2.0,<3",
-    "structlog>=24.4.0,<25",
-    "httpx>=0.27.2,<0.28",
+    "structlog>=25.5.0,<26",
+    "httpx>=0.28.1,<0.29",
 ]
 
 [dependency-groups]
-dev = [
-    "arel>=0.2.0,<0.3",
-    "websockets>=11.0.3,<12",
-    "black>=23.3.0,<24",
-    "ipykernel>=6.23.3,<7",
-]
+dev = ["black>=23.3.0,<24"]
 test = [
-    "pytest>=8.3.3,<9",
-    "pytest-asyncio>=0.26.0,<0.27",
+    "pytest>=9.0.2,<10",
+    "pytest-asyncio>=1.3.0,<2",
     "pytest-cov>=7.0.0",
     "pytest-env>=1.1.5,<2",
 ]
 
 [tool.uv]
 package = false
-default-groups = [
-    "test",
-]
+default-groups = ["test"]
 
 [build-system]
 requires = ["hatchling"]
@@ -50,19 +42,19 @@ line-length = 80
 
 [tool.ruff.lint]
 select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "C",  # flake8-comprehensions
-    "B",  # flake8-bugbear
+    "E", # pycodestyle errors
+    "W", # pycodestyle warnings
+    "F", # pyflakes
+    "I", # isort
+    "C", # flake8-comprehensions
+    "B", # flake8-bugbear
 ]
 ignore = [
-    "E501",  # line too long, handled by black
-    "B008",  # do not perform function calls in argument defaults
-    "C901",  # too complex
-    "C408",  # unnecessary-collection-call
-    "E712",  # true-false-comparison (only for TinyDB queries)
+    "E501", # line too long, handled by black
+    "B008", # do not perform function calls in argument defaults
+    "C901", # too complex
+    "C408", # unnecessary-collection-call
+    "E712", # true-false-comparison (only for TinyDB queries)
 ]
 
 [tool.isort]
@@ -77,13 +69,13 @@ check_untyped_defs = true
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-asyncio_mode="auto"
-asyncio_default_fixture_loop_scope="function"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.pytest_env]
-SPOTIPY_REDIRECT_URL="http://test:8000/test"
-SPOTIPY_CLIENT_ID="test"
-SPOTIPY_CLIENT_SECRET="test"
-TG_BOT_TOKEN="test"
-TG_LIVE_TEST="false"
-TG_LIVE_TEST_CHAT_ID="test"
+SPOTIPY_REDIRECT_URL = "http://test:8000/test"
+SPOTIPY_CLIENT_ID = "test"
+SPOTIPY_CLIENT_SECRET = "test"
+TG_BOT_TOKEN = "test"
+TG_LIVE_TEST = "false"
+TG_LIVE_TEST_CHAT_ID = "test"

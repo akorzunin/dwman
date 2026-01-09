@@ -1,4 +1,4 @@
-FROM node:20-alpine AS frontend
+FROM node:24-alpine AS frontend
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable pnpm
@@ -9,7 +9,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 COPY ["web", "./"]
 RUN pnpm run build
 
-FROM python:3.11-slim AS runner
+FROM python:3.14-slim AS runner
 
 RUN apt-get update && \
 	apt-get install -y curl && \
