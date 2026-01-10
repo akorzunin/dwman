@@ -4,7 +4,7 @@ import { Switch } from '../../shadcn/ui/switch';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
 import { z, ZodType } from 'zod';
-import { ApiService, UpdateUser } from '../../api/client';
+import { UpdateUser, UserService } from '../../api/client';
 import {
   Form,
   FormControl,
@@ -24,6 +24,7 @@ import {
   parseFormTime,
   parseUserWeekDay,
   singleWeekDay,
+  setCredentials,
 } from '../../utils/dbManager';
 
 const updateUserSchema = z.object({
@@ -130,8 +131,9 @@ export const SettingsForm = () => {
                   console.warn('No tg_chat_id');
                   return;
                 }
+                setCredentials(userData.user_id);
                 const res =
-                  await ApiService.testNotificationApiTestNotificationPost({
+                  await UserService.testNotificationApiTestNotificationPost({
                     tg_chat_id: userData.tg_chat_id,
                     subject: 'test',
                     text: 'test',
@@ -139,7 +141,7 @@ export const SettingsForm = () => {
                 console.info(res);
               }}
             >
-              Test Notification asdasd
+              Test Notification
             </Button>
           </div>
           {(sendMailValue || userData.send_mail) && (

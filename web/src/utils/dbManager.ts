@@ -3,8 +3,10 @@ import {
   ApiError,
   ApiService,
   CreateUser,
+  OpenAPI,
   UpdateUser,
   User,
+  UserService,
 } from '../api/client';
 
 export const getLocation = () => {
@@ -13,8 +15,18 @@ export const getLocation = () => {
   return [pref, location];
 };
 
+export function setCredentials(userId: string, refresh_token?: string) {
+  OpenAPI.USERNAME = userId;
+  const rt = refresh_token || localStorage.getItem('refresh_token');
+  if (!rt) {
+    return new Error('No refresh token');
+  }
+  return null;
+}
+
 export const getUserDataApi = async (userId: string): Promise<User> => {
-  const res = await ApiService.getUserApiUserGet(userId);
+  setCredentials(userId);
+  const res = await UserService.getUserApiUserGet(userId);
   return res;
 };
 
@@ -36,6 +48,7 @@ export const getOrCreateUser = async (userId: string) => {
           user_id: userId,
           is_premium: false,
           refresh_token: '',
+          refresh_token_hash: localStorage.getItem('refresh_token'),
         });
         return res;
       }
@@ -50,7 +63,11 @@ export const updateUserDataV2 = async (
   updateUser: UpdateUser
 ): Promise<User | null> => {
   try {
-    const res = await ApiService.updateUserApiUpdateUserPut(userId, updateUser);
+    setCredentials(userId);
+    const res = await UserService.updateUserApiUpdateUserPut(
+      userId,
+      updateUser
+    );
     return res;
   } catch (error) {
     if (error instanceof ApiError) {
