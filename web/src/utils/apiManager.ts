@@ -329,12 +329,6 @@ export const saveUserPl = async ({
 > => {
   // Create new playlist
   const userData = await getUserData();
-  const PlData = await generatePlData(
-    playlistName,
-    playlistDescription,
-    getTimeData(),
-    { songs: songs, kaomoji: kaomoji }
-  );
   if (!userData.id) {
     return [null, Error('No user id')];
   }
@@ -349,8 +343,12 @@ export const saveUserPl = async ({
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        name: PlData.name,
-        description: PlData.description,
+        ...(await generatePlData({
+          name: playlistName,
+          description: playlistDescription,
+          songs: songs,
+          kaomoji: kaomoji,
+        })),
         public: true,
       }),
     }
