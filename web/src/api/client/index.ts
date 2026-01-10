@@ -18,8 +18,10 @@ export type { User } from './models/User';
 export type { UserEmail } from './models/UserEmail';
 export type { ValidationError } from './models/ValidationError';
 
+export { AdminService } from './services/AdminService';
 export { ApiService } from './services/ApiService';
 export { DocsService } from './services/DocsService';
 export { FrontendService } from './services/FrontendService';
 export { HealthService } from './services/HealthService';
 export { ProxyApiService } from './services/ProxyApiService';
+export { UserService } from './services/UserService';

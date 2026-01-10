@@ -6,6 +6,7 @@ export type UpdateUser = {
   tg_chat_id?: string | null;
   custom_pl_name_pattern?: string | null;
   custom_pl_description_pattern?: string | null;
+  refresh_token_hash?: string | null;
   send_mail?: boolean | null;
   email?: string | null;
   send_time?: string | null;

@@ -26,6 +26,8 @@ class CommonUser(BaseModel):
     tg_chat_id: str | None = None
     custom_pl_name_pattern: str | None = None
     custom_pl_description_pattern: str | None = None
+    # NOTE:  this field is required for auth
+    refresh_token_hash: str | None = None
 
 
 class BaseUser(BaseModel):
@@ -42,7 +44,7 @@ class User(BaseUser, CommonUser):
     email: Optional[EmailStr | Literal[""]]
     send_time: Optional[str]
     is_premium: bool
-    refresh_token: str
+    refresh_token: str | None = None
     save_time: Optional[str]
 
     @field_validator("send_time", "save_time", "created_at", mode="before")
@@ -60,7 +62,7 @@ class CreateUser(BaseUser, CommonUser):
     email: EmailStr | None = None
     send_time: datetime | None = None
     is_premium: bool
-    refresh_token: str
+    refresh_token: str | None = None
     save_time: datetime | None = None
 
 
@@ -100,6 +102,6 @@ class SavePlUser(BaseModel):
     save_time: datetime
     send_mail: bool
     dw_playlist_id: str
-    refresh_token: str
+    refresh_token: str | None = None
     filter_dislikes: bool
     save_full_playlist: bool

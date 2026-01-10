@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+import bcrypt
 from tinydb import TinyDB, where
 from tinydb.table import Table
 
@@ -30,6 +31,12 @@ def get_user_by_tg_chat_id(db, tg_chat_id: str):
 def create_user(db, user: shemas.CreateUser) -> shemas.User:
     if db.get(where("user_id") == user.user_id):
         raise ValueError("User already exists")
+    if not user.refresh_token_hash:
+        raise ValueError("Refresh token hash field is required")
+    password = bcrypt.hashpw(
+        user.refresh_token_hash.encode("utf-8"), bcrypt.gensalt()
+    )
+    user.refresh_token_hash = password.decode("utf-8")
     new_user = user.model_dump() | {"created_at": datetime.now(timezone.utc)}
     parced_user = shemas.User(**new_user)
     db.insert(parced_user.model_dump())

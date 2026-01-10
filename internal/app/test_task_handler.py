@@ -32,6 +32,7 @@ def setup_user(mock_user_table):
             send_time="1973-01-07 14:00:00+00:00",  # type: ignore
             is_premium=False,
             refresh_token="test_refresh_token",
+            refresh_token_hash="somepass",
             tg_chat_id=TG_LIVE_TEST_CHAT_ID if TG_LIVE_TEST else "123123123",
         ),
     )

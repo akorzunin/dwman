@@ -3,11 +3,13 @@ from typing import Literal
 import structlog
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBasicCredentials
 from pydantic import BaseModel
 
 from internal.app import crud, shemas
-from internal.app.auth import check_credentials, security
+from internal.app.auth import (
+    check_credentials,
+    check_user_credentials,
+)
 from internal.app.db_connector import UsersTable
 from internal.app.task_handler import (
     manage_user_tasks,
@@ -20,6 +22,14 @@ router = APIRouter(
     prefix="/api",
     tags=["API"],
 )
+
+
+user_router = APIRouter(
+    prefix="/api",
+    tags=["User"],
+    dependencies=[Depends(check_user_credentials)],
+)
+
 
 logger = structlog.stdlib.get_logger(__name__)
 
@@ -43,7 +53,23 @@ class UserEmail(BaseModel):
     tg_chat_id: str
 
 
-@router.post("/test-notification")
+@router.post(
+    "/new_user",
+    response_model=shemas.User,
+    responses={status.HTTP_400_BAD_REQUEST: {"model": shemas.Message}},
+)
+async def create_user(user: shemas.CreateUser, users: UsersTable):
+    """Create new user"""
+    try:
+        return crud.create_user(users, user)
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"message": str(e)},
+        )
+
+
+@user_router.post("/test-notification")
 async def test_notification(msg: UserEmail, users: UsersTable):
     """Test save email"""
     try:
@@ -61,21 +87,7 @@ async def test_notification(msg: UserEmail, users: UsersTable):
     )
 
 
-### Db routes
-@router.get(
-    "/users",
-    response_model=list[shemas.User],
-)
-async def get_users(
-    users: UsersTable,
-    credentials: HTTPBasicCredentials = Depends(security),
-):
-    """Get all users from database"""
-    check_credentials(credentials)
-    return crud.get_all_users(users)
-
-
-@router.get(
+@user_router.get(
     "/user",
     status_code=status.HTTP_200_OK,
     responses={
@@ -94,23 +106,7 @@ async def get_user(user_id: str, users: UsersTable):
     )
 
 
-@router.post(
-    "/new_user",
-    response_model=shemas.User,
-    responses={status.HTTP_400_BAD_REQUEST: {"model": shemas.Message}},
-)
-async def create_user(user: shemas.CreateUser, users: UsersTable):
-    """Create new user"""
-    try:
-        return crud.create_user(users, user)
-    except Exception as e:
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={"message": str(e)},
-        )
-
-
-@router.put(
+@user_router.put(
     "/update_user",
     response_model=shemas.User,
     responses={
@@ -133,7 +129,23 @@ async def update_user(user: shemas.UpdateUser, user_id: str, users: UsersTable):
     return updated_user
 
 
-@router.delete(
+admin_router = APIRouter(
+    prefix="/api",
+    tags=["Admin"],
+    dependencies=[Depends(check_credentials)],
+)
+
+
+@admin_router.get(
+    "/users",
+    response_model=list[shemas.User],
+)
+async def get_users(users: UsersTable):
+    """Get all users from database"""
+    return crud.get_all_users(users)
+
+
+@admin_router.delete(
     "/delete_user",
     responses={
         status.HTTP_200_OK: {"model": shemas.Message},
@@ -143,10 +155,8 @@ async def update_user(user: shemas.UpdateUser, user_id: str, users: UsersTable):
 async def delete_user(
     user_id: str,
     users: UsersTable,
-    credentials: HTTPBasicCredentials = Depends(security),
 ):
     """Delete user by id"""
-    check_credentials(credentials)
     if _ := crud.delete_user(users, user_id):
         return JSONResponse(
             status_code=status.HTTP_200_OK,
@@ -158,7 +168,7 @@ async def delete_user(
     )
 
 
-@router.post("/force_notifications_task")
+@admin_router.post("/force_notifications_task")
 async def force_notifications_task(
     weekday: Literal["0", "1", "2", "3", "4", "5", "6"] | None = None,
     hour: int | None = None,

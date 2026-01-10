@@ -233,6 +233,9 @@ dwman: https://dwman.akorz-sw1.duckdns.org/
 
 
 async def save_dw(user: shemas.SavePlUser):
+    if not user.refresh_token:
+        logger.warning("No refresh token for user", user_id=user.user_id)
+        return
     #  get sp somehow
     user_data = get_access_token(user.refresh_token)
     token = user_data["access_token"]

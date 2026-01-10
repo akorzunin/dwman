@@ -16,6 +16,7 @@ from starlette.staticfiles import StaticFiles
 
 from internal.app.auth import check_credentials, security
 from internal.app.logger import setup_logging, setup_uvicorn_logging
+from internal.app.routes.api_routes import admin_router, user_router
 from internal.app.routes.api_routes import router as api_routes
 from internal.app.routes.front_routes import router as front_routes
 from internal.app.routes.proxy_routes import router as proxy_routes
@@ -75,6 +76,8 @@ app.mount(
 app.include_router(front_routes)
 app.include_router(api_routes)
 app.include_router(proxy_routes)
+app.include_router(admin_router)
+app.include_router(user_router)
 
 if IGNORE_CORS:
     app.add_middleware(

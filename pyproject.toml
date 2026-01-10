@@ -18,6 +18,7 @@ dependencies = [
     "email-validator>=2.2.0,<3",
     "structlog>=25.5.0,<26",
     "httpx>=0.28.1,<0.29",
+    "bcrypt>=5.0.0",
 ]
 
 [dependency-groups]

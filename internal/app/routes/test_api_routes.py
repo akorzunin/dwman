@@ -1,36 +1,43 @@
+import httpx
 from fastapi.testclient import TestClient
 
+TEST_USER_PASS = "pass"
 
-def setup_user(client: TestClient, **kw):
+
+def setup_user(client: TestClient, **kw) -> tuple[dict, httpx.Response]:
     resp = client.post(
         "/api/new_user",
         json=dict(
             user_id="u123",
             is_premium=False,
             refresh_token="rt_123",
+            refresh_token_hash=TEST_USER_PASS,
             **kw,
         ),
     )
-    return resp
+    return resp.json(), resp
+
+
+def auth(user_id: str):
+    return httpx.BasicAuth(user_id, TEST_USER_PASS)
 
 
 def test_create_user_ok(client: TestClient):
-    resp = setup_user(client)
+    u, resp = setup_user(client)
     assert resp.status_code == 200
-    data = resp.json()
-    assert data["user_id"] == "u123"
-    assert data["is_premium"] is False
+    assert u["user_id"] == "u123"
+    assert u["is_premium"] is False
 
 
 def test_create_user_duplicate(client: TestClient):
     _ = setup_user(client)
-    resp = setup_user(client)
+    _, resp = setup_user(client)
     assert resp.status_code == 400
     assert resp.json()["message"] == "User already exists"
 
 
 def test_update_user_ok(client: TestClient):
-    u_resp = setup_user(client)
+    u, _ = setup_user(client)
 
     payload = {
         "send_mail": False,
@@ -42,8 +49,9 @@ def test_update_user_ok(client: TestClient):
     }
     resp = client.put(
         "/api/update_user",
-        params={"user_id": u_resp.json()["user_id"]},
+        params={"user_id": u["user_id"]},
         json=payload,
+        auth=auth(u["user_id"]),
     )
     assert resp.status_code == 200
     for k in [
@@ -62,16 +70,18 @@ def test_update_user_not_found(client):
         "/api/update_user",
         params={"user_id": "ghost"},
         json={"send_mail": True},
+        auth=auth("ghost"),
     )
-    assert resp.status_code == 400
-    assert resp.json()["message"] == "User not found"
+    assert resp.status_code == 401
+    assert resp.json()["detail"] == "User or refresh token not found"
 
 
 def test_notify_user_ok(client: TestClient):
-    _ = setup_user(client, tg_chat_id="tg_123")
+    u, _ = setup_user(client, tg_chat_id="tg_123")
     resp = client.post(
         "/api/test-notification",
         json={"tg_chat_id": "tg_123", "subject": "test", "text": "test"},
+        auth=auth(u["user_id"]),
     )
     assert resp.status_code == 200
     assert resp.json()["message"] == "notification has been sent"
@@ -81,11 +91,11 @@ def test_update_user_custome_description(client: TestClient):
     pl_name = "test_pattern_{year}_{month}_{day}"
     pl_desc = "test_pattern_desc_{year}_{month}_{day}"
 
-    u = setup_user(
+    u, _ = setup_user(
         client,
         custom_pl_name_pattern=pl_name,
         custom_pl_description_pattern=pl_desc,
-    ).json()
+    )
     resp = client.put(
         "/api/update_user",
         params={"user_id": u["user_id"]},
@@ -93,6 +103,7 @@ def test_update_user_custome_description(client: TestClient):
             "custom_pl_name_pattern": pl_name,
             "custom_pl_description_pattern": pl_desc,
         },
+        auth=auth(u["user_id"]),
     )
     assert resp.status_code == 200
     assert resp.json()["custom_pl_name_pattern"] == pl_name
