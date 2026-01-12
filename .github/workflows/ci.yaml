@@ -3,11 +3,11 @@ name: ci-workflow
 on:
   push:
     branches:
-      - master
+      - main
       - test
   pull_request:
     branches:
-      - master
+      - main
       - test
   workflow_dispatch:
 
