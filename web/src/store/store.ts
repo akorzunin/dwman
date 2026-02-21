@@ -43,6 +43,9 @@ export const UserDataAtom = atom<User>({
   is_premium: false,
   refresh_token: '',
   created_at: '',
+  email: '',
+  send_time: '',
+  save_time: '',
 });
 
 export const easterEggKaomojiAtom = atom(get_text_emoji());

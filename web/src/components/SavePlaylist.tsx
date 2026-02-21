@@ -22,9 +22,7 @@ import {
   DropdownMenuTrigger,
   Separator,
 } from '@radix-ui/react-dropdown-menu';
-import { ApiService, User } from '../api/client';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'react-router';
 
 const dotClassName =
   'absolute right-[-6px] top-[-6px] inline-flex h-3 w-3 bg-purple-700';
@@ -39,24 +37,24 @@ const SavePlaylist: FC<{ className?: string }> = ({ className }) => {
   const PlaylistSongs = useAtomValue(PlaylistSongsAtom);
   const currentSongs = useAtomValue(SongSetAtom);
 
-  const [playlistName, setPlaylistName] = useAtom(PlaylistNameTemplateAtom);
+  const [playlistName] = useAtom(PlaylistNameTemplateAtom);
   const playlistDescription = useAtomValue(PlaylistDescriptionTemplateAtom);
   const easterEggKaomoji = useAtomValue(easterEggKaomojiAtom);
 
-  const { userId } = useParams();
-  const plDescriptionQuery = useQuery({
-    queryKey: ['customPlName', userId],
-    queryFn: async () => {
-      if (!userId) return null;
-      const res = await ApiService.getUserApiUserGet(userId);
-      if (!res.ok) return null;
-      const d: User = await res.json();
-      if (!d.custom_description_pattern) {
-        return null;
-      }
-      setPlaylistName(d.custom_description_pattern);
-    },
-  });
+  // const { userId } = useParams();
+  // const plDescriptionQuery = useQuery({
+  //   queryKey: ['customPlName', userId],
+  //   queryFn: async () => {
+  //     if (!userId) return null;
+  //     const res = await ApiService.getUserApiUserGet(userId);
+  //     if (!res.ok) return null;
+  //     const d: User = await res.json();
+  //     if (!d.custom_description_pattern) {
+  //       return null;
+  //     }
+  //     setPlaylistName(d.custom_description_pattern);
+  //   },
+  // });
 
   const currentPlNameQuery = useQuery({
     queryKey: ['currentPlName'],

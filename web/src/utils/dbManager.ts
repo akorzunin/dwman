@@ -2,7 +2,6 @@ import dayjs from 'dayjs';
 import {
   ApiError,
   ApiService,
-  CreateUser,
   OpenAPI,
   UpdateUser,
   User,

@@ -17,6 +17,11 @@ export const getAccessToken = async (): Promise<string> => {
     }
   }
   const tokenObj = await getNewAccessToken(refreshToken);
+  if ('error' in tokenObj) {
+    throw new Error(
+      `Failed to get new access token ${tokenObj.error} ${tokenObj.error_description}`
+    );
+  }
   localStorage.setItem('access_token', tokenObj.access_token);
   localStorage.setItem(
     'expired_at',
