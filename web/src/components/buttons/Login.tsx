@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { Button } from '../../shadcn/ui/button';
-import { Ellipsis, Settings } from 'lucide-react';
+import { Ellipsis } from 'lucide-react';
 
 import {
   Dialog,
@@ -42,10 +42,10 @@ export const Login = ({ basePath }: { basePath: string }) => {
             </DialogTrigger>
           </DropdownMenuContent>
         </DropdownMenu>
-        <DialogContent>
+        <DialogContent className={'max-w-lg'}>
           <DialogTitle>Login with refresh token</DialogTitle>
           <DialogDescription>
-            <input
+            <textarea
               value={refreshToken}
               onChange={(e) => setRefreshToken(e.target.value)}
               onKeyDown={async (e) => {
@@ -56,10 +56,21 @@ export const Login = ({ basePath }: { basePath: string }) => {
                 const p = await getUserPath();
                 window.location.href = p;
               }}
-              type="text"
               placeholder="Paste refresh token here"
-              className="w-full rounded-md border-2 border-solid border-secondary bg-background px-3 py-2 text-sm text-primary-foreground"
+              className="min-h-32 w-full rounded-md border-2 border-solid border-secondary bg-background px-3 py-2 text-sm text-primary-foreground"
             />
+            <Button
+              className="mt-2"
+              variant={'secondary'}
+              onClick={async () => {
+                if (!refreshToken) return;
+                localStorage.setItem('refresh_token', refreshToken);
+                const p = await getUserPath();
+                window.location.href = p;
+              }}
+            >
+              Login
+            </Button>
           </DialogDescription>
         </DialogContent>
       </Dialog>
