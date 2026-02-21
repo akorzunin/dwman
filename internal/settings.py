@@ -23,3 +23,5 @@ API_PASSWORD = os.getenv("API_PASSWORD", "admin")
 TG_BOT_TOKEN = os.getenv("TG_BOT_TOKEN")
 TG_LIVE_TEST = os.getenv("TG_LIVE_TEST", "False") in _true_values
 TG_LIVE_TEST_CHAT_ID = os.getenv("TG_LIVE_TEST_CHAT_ID")
+
+DEPLOY_URL = os.getenv("DEPLOY_URL", "https://dwman.akorz-nt1.duckdns.org")

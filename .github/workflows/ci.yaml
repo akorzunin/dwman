@@ -158,4 +158,5 @@ jobs:
             PORT=${{ vars.PORT }}
             TG_BOT_TOKEN=${{ secrets.TG_BOT_TOKEN }}
             IGNORE_CORS=${{ vars.IGNORE_CORS || '' }}
+            DEPLOY_URL=${{ vars.DEPLOY_URL }}
             "

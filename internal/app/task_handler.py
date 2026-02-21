@@ -19,6 +19,7 @@ from internal.app.mail_handle import (
 )
 from internal.app.utils import get_access_token
 from internal.notifications.tg import send_telegram_notification
+from internal.settings import DEPLOY_URL
 
 logger = structlog.stdlib.get_logger(__name__)
 
@@ -223,7 +224,7 @@ async def send_notification(user: shemas.User):
     msg = f"""
 Save Discover Weekly Playlist {get_pl_name(user.user_id)}
 
-dwman: https://dwman.akorz-sw1.duckdns.org/
+dwman: {DEPLOY_URL}
 """
     if user.tg_chat_id:
         msg += f"playlist link: https://open.spotify.com/playlist/{user.dw_playlist_id}"

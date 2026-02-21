@@ -36,6 +36,7 @@
         PORT: "{{ PORT }}"
         TG_BOT_TOKEN: "{{ TG_BOT_TOKEN }}"
         IGNORE_CORS: "{{ IGNORE_CORS }}"
+        DEPLOY_URL: "{{ DEPLOY_URL }}"
       register: out
       changed_when: out.rc != 0
 

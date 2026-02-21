@@ -13,6 +13,7 @@ services:
       - API_PASSWORD=${API_PASSWORD}
       - TG_BOT_TOKEN=${TG_BOT_TOKEN}
       - IGNORE_CORS=${IGNORE_CORS:-}
+      - DEPLOY_URL=${DEPLOY_URL}
     volumes:
       - ./data:/app/data:rw
     healthcheck:
