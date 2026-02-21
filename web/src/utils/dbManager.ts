@@ -21,6 +21,8 @@ export function setCredentials(userId: string, refresh_token?: string) {
   if (!rt) {
     return new Error('No refresh token');
   }
+  // NOTE: cuz bcrypt doesnt support pass longer than 72 chars
+  OpenAPI.PASSWORD = rt.slice(0, 72);
   return null;
 }
 
@@ -28,10 +30,6 @@ export const getUserDataApi = async (userId: string): Promise<User> => {
   setCredentials(userId);
   const res = await UserService.getUserApiUserGet(userId);
   return res;
-};
-
-export const createUser = async (userData: CreateUser): Promise<User> => {
-  return await ApiService.createUserApiNewUserPost(userData);
 };
 
 export const getOrCreateUser = async (userId: string) => {
@@ -43,12 +41,13 @@ export const getOrCreateUser = async (userId: string) => {
     return userData;
   } catch (error) {
     if (error instanceof ApiError) {
-      if (error.status === 404) {
-        const res = await createUser({
+      if (error.status === 404 || error.status === 401) {
+        const res = await ApiService.createUserApiNewUserPost({
           user_id: userId,
           is_premium: false,
-          refresh_token: '',
-          refresh_token_hash: localStorage.getItem('refresh_token'),
+          refresh_token_hash: localStorage
+            .getItem('refresh_token')
+            ?.slice(0, 72),
         });
         return res;
       }

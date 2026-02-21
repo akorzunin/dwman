@@ -26,10 +26,11 @@ import {
   singleWeekDay,
   setCredentials,
 } from '../../utils/dbManager';
+import { useParams } from 'react-router';
 
 const updateUserSchema = z.object({
-  send_mail: z.boolean(),
-  email: z.string().email({ message: 'Invalid email' }).optional(),
+  send_mail: z.boolean().optional(),
+  email: z.string().optional(),
   dw_playlist_id: z.string().min(20, {
     message: 'DW playlist id must be at least 20 characters.',
   }),
@@ -37,16 +38,14 @@ const updateUserSchema = z.object({
   save_hour_minute: z.string({
     message: 'Save time must be at least 5 characters. ex: 16:00',
   }),
-  tg_chat_id: z
-    .string()
-    .min(5, { message: 'TG chat id must be at least 5 characters.' })
-    .optional(),
+  tg_chat_id: z.string().optional(),
 }) satisfies ZodType<UpdateUser>;
 
 type FormData = z.infer<typeof updateUserSchema>;
 
 export const SettingsForm = () => {
   const [userData, setUserData] = useAtom(UserDataAtom);
+  const { userId } = useParams();
   const form = useForm<FormData>({
     resolver: zodResolver(updateUserSchema),
     defaultValues: {
@@ -75,12 +74,14 @@ export const SettingsForm = () => {
     if (values.send_mail === false) {
       updateUser.send_mail = false;
     }
-    if (updateUser) {
-      const res = await updateUserDataV2(userData.user_id, updateUser);
+    if (updateUser && userId) {
+      const res = await updateUserDataV2(userId, updateUser);
       if (!res) {
-        return;
+        throw new Error(`Error while updating user: ${res}`);
       }
       setUserData(res);
+    } else {
+      console.error('No user id');
     }
   }
   useEffect(() => {
@@ -107,7 +108,12 @@ export const SettingsForm = () => {
   return (
     <div className="rounded-md bg-secondary bg-opacity-30 p-4">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={form.handleSubmit(onSubmit, (errors) =>
+            console.error('Validation errors:', errors)
+          )}
+          className="space-y-4"
+        >
           <div className="flex justify-between">
             <FormField
               control={form.control}
