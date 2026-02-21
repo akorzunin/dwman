@@ -1,8 +1,8 @@
 # Spotify_save_DW
 
-Website: <https://dwman.akorz-sw1.duckdns.org/>
+Website: <https://dwman.akorz-nt1.duckdns.org/>
 
-Test server: <https://test-dwman.akorz-sw1.duckdns.org/>
+Test server: <https://test-dwman.akorz-nt1.duckdns.org/>
 
 ## How it works
 

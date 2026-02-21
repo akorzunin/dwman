@@ -42,7 +42,7 @@ tasks:
     cmds:
       - task: frontend-dev-internal
         vars:
-          VITE_API_URL: "https://test-dwman.akorz-sw1.duckdns.org"
+          VITE_API_URL: "https://test-dwman.akorz-nt1.duckdns.org"
 
   frontend-api-dev:
     cmds:

@@ -204,7 +204,7 @@ export const SettingsForm = () => {
               <FormItem>
                 <FormLabel>Discover Weekly playlist id</FormLabel>
                 <FormControl className="mt-1">
-                  <Input placeholder="31aaa1aa111aa11aa1a1aa" {...field} />
+                  <Input placeholder="37i9..." {...field} />
                 </FormControl>
                 <FormMessage className="pt-1" />
               </FormItem>
