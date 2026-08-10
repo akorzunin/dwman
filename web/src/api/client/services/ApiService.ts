@@ -4,7 +4,6 @@
 /* eslint-disable */
 import type { CreateUser } from '../models/CreateUser';
 import type { RefreshToken } from '../models/RefreshToken';
-import type { SpotifyError } from '../models/SpotifyError';
 import type { SpotifyToken } from '../models/SpotifyToken';
 import type { User } from '../models/User';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -19,7 +18,7 @@ export class ApiService {
    */
   public static refreshTokenApiRefreshTokenPost(
     requestBody: RefreshToken
-  ): CancelablePromise<SpotifyToken | SpotifyError> {
+  ): CancelablePromise<SpotifyToken> {
     return __request(OpenAPI, {
       method: 'POST',
       url: '/api/refresh_token',

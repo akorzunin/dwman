@@ -9,7 +9,7 @@ import structlog
 from pydantic import ValidationError
 from tinydb import where
 
-from internal.app import shemas
+from internal.app import crud, shemas
 from internal.app.db_connector import users
 from internal.app.dw_save_algoritm import get_pl_name, save_playlist_algorithm
 from internal.app.mail_handle import (
@@ -17,7 +17,7 @@ from internal.app.mail_handle import (
     render_save_pl_text,
     send_email,
 )
-from internal.app.utils import get_access_token
+from internal.app.utils import SpotifyTokenError, get_access_token
 from internal.notifications.tg import send_telegram_notification
 from internal.settings import DEPLOY_URL
 
@@ -82,19 +82,6 @@ def parse_task_time(send_time: str | datetime) -> tuple[int, str]:
     )
 
 
-def user_save_task(user: shemas.SavePlUser):
-    weekday, shedule_time = parse_task_time(user.save_time)
-    return (
-        get_weekday_task(weekday)
-        .at(shedule_time)
-        .do(
-            save_dw,
-            user=user,
-        )
-        .tag(get_tag(user.user_id, "save"))
-    )
-
-
 def revive_user_tasks():
     """Restore tasks from db after program restart"""
     notify_users = users.search(~(where("send_time").one_of([None, ""])))
@@ -112,30 +99,12 @@ def revive_user_tasks():
             f"[Notify Task created] Next run: {str(task.next_run)} "
             f"User: {user['user_id']}"
         )
-    save_dw_users = users.search(where("save_dw_weekly") == True)
-    for user in save_dw_users:
-        try:
-            u = shemas.SavePlUser(**user)
-        except ValidationError as e:
-            logger.exception(f"Error while creating save task: {e}")
-            continue
-        task = user_save_task(u)
-        logger.info(
-            f"[Save Task created] Next run: {str(task.next_run)} "
-            f"User: {user['user_id']}"
-        )
 
 
 def manage_user_tasks(user: shemas.User) -> Optional[shemas.Message]:
-    """Create or cancel tasks for a user on given data"""
-    if not validate_user_task_data(user):
-        return shemas.Message(message="Failed to create tasks for user")
+    """Create or cancel notification tasks for a user."""
     if not user.send_mail:
-        # delete user notification task
         schedule.clear(get_tag(user.user_id, "notify"))
-    if not user.save_dw_weekly:
-        # delete user save task
-        schedule.clear(get_tag(user.user_id, "save"))
 
     if user.send_mail and schedule.get_jobs(
         get_tag(user.user_id, "notify"),
@@ -146,42 +115,12 @@ def manage_user_tasks(user: shemas.User) -> Optional[shemas.Message]:
             f"[New Notify Task] Next run: {str(task.next_run)} "
             f"User: {user.user_id}"
         )
-    if user.save_dw_weekly and schedule.get_jobs(
-        get_tag(user.user_id, "save"),
-    ):
-        # create user save task if task is not exists
-        task = user_save_task(user)  # type: ignore
-        logger.info(
-            f"[New Save Task] Next run: {str(task.next_run)} "
-            f"User: {user.user_id}"
-        )
     return None
 
 
-def get_tag(user_id: str, task_type: Literal["save", "notify"]):
+def get_tag(user_id: str, task_type: Literal["notify"]):
     """Generate unique tag for each task"""
     return f"{user_id}_{task_type}"
-
-
-def validate_user_task_data(user: shemas.User) -> bool:
-    if not user.is_premium and user.filter_dislikes and user.save_dw_weekly:
-        # cant use playback alg on non premium users
-        return False
-    if not user.save_dw_weekly:
-        #  Dont need to save any
-        return True
-    if not user.filter_dislikes and user.save_full_playlist:
-        # don't use playback alg and save all 30 songs from pl anyway
-        return True
-    if user.filter_dislikes:
-        if not user.save_full_playlist:
-            # use playback alg but if it returns all 30 songs don't save
-            return True
-        if user.save_full_playlist:
-            # use playback alg but if it returns all 30 songs save pl anyway
-            return True
-    # invalid state
-    return False
 
 
 def get_weekday_task(weekday: int):
@@ -237,8 +176,45 @@ async def save_dw(user: shemas.SavePlUser):
     if not user.refresh_token:
         logger.warning("No refresh token for user", user_id=user.user_id)
         return
-    #  get sp somehow
-    user_data = get_access_token(user.refresh_token)
+    try:
+        user_data = get_access_token(user.refresh_token)
+    except SpotifyTokenError as exc:
+        logger.warning(
+            "Spotify token refresh failed while saving playlist",
+            user_id=user.user_id,
+            spotify_status=exc.status_code,
+            spotify_error=exc.error,
+        )
+        return
+
+    if (
+        not isinstance(user_data, dict)
+        or user_data.get("error")
+        or not user_data.get("access_token")
+    ):
+        spotify_error = (
+            user_data.get("error", "invalid_response")
+            if isinstance(user_data, dict)
+            else "invalid_response"
+        )
+        logger.warning(
+            "Spotify returned an invalid token response while saving playlist",
+            user_id=user.user_id,
+            spotify_error=spotify_error,
+        )
+        return
+
+    if new_refresh_token := user_data.get("refresh_token"):
+        try:
+            crud.update_refresh_token(users, user.user_id, new_refresh_token)
+        except Exception as exc:
+            logger.error(
+                "Could not persist rotated Spotify refresh token",
+                user_id=user.user_id,
+                error=type(exc).__name__,
+            )
+            return
+
     token = user_data["access_token"]
     sp = spotipy.Spotify(auth=token)
     # TODO: figure out why i didnt call this function

@@ -8,7 +8,6 @@ export type User = {
   custom_pl_description_pattern?: string | null;
   refresh_token_hash?: string | null;
   dw_playlist_id?: string | null;
-  save_dw_weekly?: boolean;
   save_full_playlist?: boolean;
   filter_dislikes?: boolean;
   user_id: string;
@@ -18,5 +17,4 @@ export type User = {
   send_time: string | null;
   is_premium: boolean;
   refresh_token?: string | null;
-  save_time: string | null;
 };

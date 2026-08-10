@@ -6,12 +6,13 @@ from urllib.parse import urlencode
 import requests
 import spotipy
 import structlog  # type: ignore
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
 ### pydantic
 from pydantic import BaseModel
 
+from internal.app.utils import SpotifyTokenError, parse_spotify_token_response
 from internal.scope import scope_str
 from internal.settings import (
     SPOTIPY_CLIENT_ID,
@@ -122,18 +123,37 @@ async def login_redirect(
 )
 async def get_token(req: Request, code: str, redirect: bool = True):
     redirect_uri = get_redirect_url(req.headers.get("Referer"))
-    r = requests.post(
-        "https://accounts.spotify.com/api/token",
-        data={
-            "grant_type": "authorization_code",
-            "code": code,
-            "redirect_uri": redirect_uri,
-            "client_id": SPOTIPY_CLIENT_ID,
-            "client_secret": SPOTIPY_CLIENT_SECRET,
-        },
-    ).json()
+    try:
+        response = requests.post(
+            "https://accounts.spotify.com/api/token",
+            data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": redirect_uri,
+                "client_id": SPOTIPY_CLIENT_ID,
+                "client_secret": SPOTIPY_CLIENT_SECRET,
+            },
+        )
+        token_data = parse_spotify_token_response(response)
+    except requests.RequestException:
+        logger.warning("Spotify token exchange request failed")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Spotify token exchange failed",
+        ) from None
+    except SpotifyTokenError as exc:
+        logger.warning(
+            "Spotify token exchange failed",
+            spotify_status=exc.status_code,
+            spotify_error=exc.error,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Spotify token exchange failed",
+        ) from None
+
     logger.info(f"REDIRECT {redirect_uri}")
-    token_data = dict(r) | {"get_time": str(datetime.now())}
+    token_data = dict(token_data) | {"get_time": str(datetime.now())}
     sp = spotipy.Spotify(auth=token_data["access_token"])
     user_id = sp.current_user()["id"]
     if not redirect:

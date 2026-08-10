@@ -12,9 +12,7 @@ export type UpdateUser = {
   send_time?: string | null;
   is_premium?: boolean | null;
   refresh_token?: string | null;
-  save_time?: string | null;
   dw_playlist_id?: string | null;
-  save_dw_weekly?: boolean | null;
   save_full_playlist?: boolean | null;
   filter_dislikes?: boolean | null;
 };

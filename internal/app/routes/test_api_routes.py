@@ -1,5 +1,12 @@
+from unittest import mock
+
+import bcrypt
 import httpx
 from fastapi.testclient import TestClient
+
+from internal.app.db_connector import get_users_table
+from internal.app.utils import SpotifyTokenError
+from main import app
 
 TEST_USER_PASS = "pass"
 
@@ -20,6 +27,107 @@ def setup_user(client: TestClient, **kw) -> tuple[dict, httpx.Response]:
 
 def auth(user_id: str):
     return httpx.BasicAuth(user_id, TEST_USER_PASS)
+
+
+def test_refresh_token_rotates_and_updates_authentication(client: TestClient):
+    old_refresh_token = "api-old-refresh"
+    new_refresh_token = "api-new-refresh"
+    client.post(
+        "/api/new_user",
+        json={
+            "user_id": "rotation-api-user",
+            "is_premium": False,
+            "refresh_token": old_refresh_token,
+            "refresh_token_hash": old_refresh_token,
+        },
+    )
+
+    with mock.patch(
+        "internal.app.routes.api_routes.get_access_token",
+        return_value={
+            "access_token": "access-token",
+            "token_type": "Bearer",
+            "expires_in": 3600,
+            "refresh_token": new_refresh_token,
+        },
+    ):
+        response = client.post(
+            "/api/refresh_token",
+            json={"refresh_token": old_refresh_token},
+        )
+
+    assert response.status_code == 202
+    assert response.json()["refresh_token"] == new_refresh_token
+    users = app.dependency_overrides[get_users_table]()
+    stored_user = users.get(
+        lambda value: value["user_id"] == "rotation-api-user"
+    )
+    assert stored_user["refresh_token"] == new_refresh_token
+    assert bcrypt.checkpw(
+        new_refresh_token.encode(),
+        stored_user["refresh_token_hash"].encode(),
+    )
+
+    assert (
+        client.get(
+            "/api/user",
+            params={"user_id": "rotation-api-user"},
+            auth=httpx.BasicAuth("rotation-api-user", new_refresh_token),
+        ).status_code
+        == 200
+    )
+    assert (
+        client.get(
+            "/api/user",
+            params={"user_id": "rotation-api-user"},
+            auth=httpx.BasicAuth("rotation-api-user", old_refresh_token),
+        ).status_code
+        == 401
+    )
+
+
+def test_refresh_token_without_rotation_preserves_existing_token(
+    client: TestClient,
+):
+    user, _ = setup_user(client)
+    with mock.patch(
+        "internal.app.routes.api_routes.get_access_token",
+        return_value={
+            "access_token": "access-token",
+            "token_type": "Bearer",
+            "expires_in": 3600,
+        },
+    ):
+        response = client.post(
+            "/api/refresh_token",
+            json={"refresh_token": "rt_123"},
+        )
+
+    assert response.status_code == 202
+    assert "refresh_token" not in response.json()
+    users = app.dependency_overrides[get_users_table]()
+    stored_user = users.get(lambda value: value["user_id"] == user["user_id"])
+    assert stored_user["refresh_token"] == "rt_123"
+    assert stored_user["refresh_token_hash"] == user["refresh_token_hash"]
+
+
+def test_refresh_token_spotify_error_is_not_success_or_secret_leak(
+    client: TestClient,
+    caplog,
+):
+    secret = "secret-refresh-token"
+    with mock.patch(
+        "internal.app.routes.api_routes.get_access_token",
+        side_effect=SpotifyTokenError(400, "invalid_grant"),
+    ):
+        response = client.post(
+            "/api/refresh_token",
+            json={"refresh_token": secret},
+        )
+
+    assert response.status_code == 400
+    assert "secret-refresh-token" not in response.text
+    assert secret not in caplog.text
 
 
 def test_create_user_ok(client: TestClient):

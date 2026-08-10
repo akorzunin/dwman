@@ -46,7 +46,7 @@ def check_user_credentials(
             detail="User or refresh token not found",
         )
     correct_password = bcrypt.checkpw(
-        credentials.password.encode("utf-8"),
+        credentials.password.encode("utf-8")[:72],
         u.refresh_token_hash.encode("utf-8"),
     )
     if not correct_password:

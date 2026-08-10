@@ -1,7 +1,7 @@
 from typing import Literal
 
 import structlog
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -16,7 +16,7 @@ from internal.app.task_handler import (
     send_notification,
     send_notifications_task,
 )
-from internal.app.utils import get_access_token
+from internal.app.utils import SpotifyTokenError, get_access_token
 
 router = APIRouter(
     prefix="/api",
@@ -36,14 +36,80 @@ logger = structlog.stdlib.get_logger(__name__)
 
 @router.post(
     "/refresh_token",
-    response_model=shemas.SpotifyToken | shemas.SpotifyError,
+    response_model=shemas.SpotifyToken,
+    response_model_exclude_none=True,
     status_code=status.HTTP_202_ACCEPTED,
 )
 async def refresh_token(
     refresh_token: shemas.RefreshToken,
+    users: UsersTable,
 ):
-    res = dict(get_access_token(refresh_token.refresh_token))
-    # TODO return error if model is SpotifyError
+    try:
+        res = get_access_token(refresh_token.refresh_token)
+    except SpotifyTokenError as exc:
+        logger.warning(
+            "Spotify token refresh failed",
+            spotify_status=exc.status_code,
+            spotify_error=exc.error,
+        )
+        error_status = (
+            exc.status_code
+            if 400 <= exc.status_code < 500
+            else status.HTTP_502_BAD_GATEWAY
+        )
+        raise HTTPException(
+            status_code=error_status,
+            detail="Spotify token refresh failed",
+        ) from None
+
+    # Keep this guard for callers/tests that replace get_access_token directly.
+    if (
+        not isinstance(res, dict)
+        or res.get("error")
+        or not {"access_token", "token_type", "expires_in"}.issubset(res)
+    ):
+        spotify_error = (
+            res.get("error", "invalid_response")
+            if isinstance(res, dict)
+            else "invalid_response"
+        )
+        logger.warning(
+            "Spotify returned an invalid token response",
+            spotify_error=spotify_error,
+        )
+        error_status = (
+            status.HTTP_400_BAD_REQUEST
+            if isinstance(res, dict) and res.get("error")
+            else status.HTTP_502_BAD_GATEWAY
+        )
+        raise HTTPException(
+            status_code=error_status,
+            detail="Spotify token refresh failed",
+        )
+
+    if new_refresh_token := res.get("refresh_token"):
+        user = crud.get_user_by_refresh_token(
+            users, refresh_token.refresh_token
+        )
+        if user is None:
+            logger.warning("Rotated Spotify refresh token has no matching user")
+        else:
+            try:
+                crud.update_refresh_token(
+                    users,
+                    user.user_id,
+                    new_refresh_token,
+                )
+            except Exception as exc:
+                logger.error(
+                    "Could not persist rotated Spotify refresh token",
+                    user_id=user.user_id,
+                    error=type(exc).__name__,
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Could not persist refreshed token",
+                ) from None
     return res
 
 

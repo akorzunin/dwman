@@ -50,11 +50,19 @@ export const refreshToken = () => {
     },
     body: JSON.stringify({ refresh_token: refreshToken }),
   })
-    .then((res) => res.json())
+    .then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error('Spotify token refresh failed');
+      }
+      return data;
+    })
     .then((data) => {
       // save data to browser cookies
       setCookies(data);
-      localStorage.setItem('refresh_token', data.refresh_token);
+      if (data.refresh_token) {
+        localStorage.setItem('refresh_token', data.refresh_token);
+      }
     })
     .catch((err) => {
       console.error(err);
