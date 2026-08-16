@@ -5,6 +5,7 @@ RUN corepack enable pnpm
 WORKDIR /frontend
 COPY ["web/package.json", "./"]
 COPY ["web/pnpm-lock.yaml", "./"]
+COPY ["web/pnpm-workspace.yaml", "./"]
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 COPY ["web", "./"]
 RUN pnpm run build
