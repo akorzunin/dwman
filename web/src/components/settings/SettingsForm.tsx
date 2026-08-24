@@ -1,10 +1,11 @@
-import { useAtom } from 'jotai';
-import { UserDataAtom } from '../../store/store';
-import { Switch } from '../../shadcn/ui/switch';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAtom } from 'jotai';
+import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { z, ZodType } from 'zod';
+import { useParams } from 'react-router';
+import { ZodType, z } from 'zod';
 import { UpdateUser, UserService } from '../../api/client';
+import { Button } from '../../shadcn/ui/button';
 import {
   Form,
   FormControl,
@@ -14,19 +15,18 @@ import {
   FormMessage,
 } from '../../shadcn/ui/form';
 import { Input } from '../../shadcn/ui/input';
-import { Button } from '../../shadcn/ui/button';
-import { useEffect } from 'react';
+import { Switch } from '../../shadcn/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '../../shadcn/ui/toggle-group';
+import { UserDataAtom } from '../../store/store';
 import {
-  weekDays,
-  updateUserDataV2,
-  parseUserSaveTime,
   parseFormTime,
+  parseUserSaveTime,
   parseUserWeekDay,
-  singleWeekDay,
   setCredentials,
+  singleWeekDay,
+  updateUserDataV2,
+  weekDays,
 } from '../../utils/dbManager';
-import { useParams } from 'react-router';
 
 const updateUserSchema = z.object({
   send_mail: z.boolean().optional(),

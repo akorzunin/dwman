@@ -1,7 +1,7 @@
+import { Ellipsis } from 'lucide-react';
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { Button } from '../../shadcn/ui/button';
-import { Ellipsis } from 'lucide-react';
-
 import {
   Dialog,
   DialogContent,
@@ -9,13 +9,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '../../shadcn/ui/dialog';
-import { useState } from 'react';
-import { getUserPath } from '../../utils/cookieHandle';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '../../shadcn/ui/dropdown-menu';
+import { getUserPath } from '../../utils/cookieHandle';
 
 export const Login = ({ basePath }: { basePath: string }) => {
   const [refreshToken, setRefreshToken] = useState('');

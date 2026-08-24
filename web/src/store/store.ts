@@ -1,8 +1,8 @@
 import { atom } from 'jotai';
+import { atomWithStorage } from 'jotai/utils';
+import { User } from '../api/client';
 import { emptySong, Song } from '../interfaces/Song';
 import { SongSet } from '../utils/songSet';
-import { User } from '../api/client';
-import { atomWithStorage } from 'jotai/utils';
 import { get_text_emoji } from '../utils/utils';
 
 export const easterEggCountAtom = atom(0);

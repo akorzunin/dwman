@@ -1,9 +1,9 @@
-import { FC, useState } from 'react';
-import SongCard from './songs/SongCard';
-import { emptySong, Song } from '../interfaces/Song';
 import { useAtomValue } from 'jotai';
-import { SongSetAtom } from '../store/store';
+import { FC, useState } from 'react';
+import { emptySong, Song } from '../interfaces/Song';
 import { Button } from '../shadcn/ui/button';
+import { SongSetAtom } from '../store/store';
+import SongCard from './songs/SongCard';
 
 const SaveSongPlaylist: FC = () => {
   const [, setKey] = useState('');
@@ -21,7 +21,7 @@ const SaveSongPlaylist: FC = () => {
           .reverse()
           .map((song: Song, index: number) => (
             <SongCard
-              key={index}
+              key={song.id ?? song.uri ?? song.name}
               song={song}
               index={songs.items.length - index}
               isDeletable={true}

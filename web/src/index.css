@@ -1,4 +1,4 @@
-@import './utils/tw-colors.css';
+@import "./utils/tw-colors.css";
 
 @tailwind base;
 @tailwind components;
@@ -46,7 +46,7 @@
 }
 
 .check + label::before {
-  content: '';
+  content: "";
   display: inline-block;
   box-sizing: border-box;
   width: 18px;

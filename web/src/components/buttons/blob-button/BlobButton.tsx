@@ -18,25 +18,23 @@ const circles = Object.keys(circleStyle);
 
 const BlobButton: FC<IBlobButton> = ({ title = 'Blob', link = '/' }) => {
   return (
-    <>
-      <div className={`relative overflow-hidden ${styles.circle}`}>
-        {circles.map((circle) => {
-          return (
-            <div
-              key={circle}
-              className={`${styles.circle__main} ${circleStyle[circle]}`}
-            ></div>
-          );
-        })}
-        <a
-          href={link}
-          className="absolute flex h-48 w-48 cursor-pointer items-center justify-center rounded-full border border-transparent bg-opacity-0 text-xl font-bold text-primary-foreground transition-opacity hover:opacity-80"
-          tabIndex={0}
-        >
-          {title}
-        </a>
-      </div>
-    </>
+    <div className={`relative overflow-hidden ${styles.circle}`}>
+      {circles.map((circle) => {
+        return (
+          <div
+            key={circle}
+            className={`${styles.circle__main} ${circleStyle[circle]}`}
+          ></div>
+        );
+      })}
+      <a
+        href={link}
+        className="absolute flex h-48 w-48 cursor-pointer items-center justify-center rounded-full border border-transparent bg-opacity-0 text-xl font-bold text-primary-foreground transition-opacity hover:opacity-80"
+        tabIndex={0}
+      >
+        {title}
+      </a>
+    </div>
   );
 };
 

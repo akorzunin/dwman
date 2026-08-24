@@ -1,24 +1,19 @@
-version: "3.4"
-
 services:
-  spotifydwapi:
-    image: spotifydwapi
+  dwman:
+    image: dwman
     build:
       context: .
       dockerfile: ./Dockerfile
-      args:
-        MASHINE: ${MASHINE}
     command:
       [
         "sh",
         "-c",
-        "pip install debugpy -t /tmp && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 /app/src/main.py",
+        "pip install debugpy -t /tmp && /app/.venv/bin/python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 /app/main.py",
       ]
     ports:
-      - ${PORT}:${PORT}
-      - 5678:5678
+      - "${PORT:-8000}:8000"
+      - "5678:5678"
     env_file:
       - .env
     volumes:
       - ./data:/app/data:rw
-      - ./certbot:/app/certbot:ro

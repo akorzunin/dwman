@@ -1,5 +1,7 @@
 from jinja2 import Template
 
+from internal.settings import DEPLOY_URL
+
 
 def render_template(template_filename, context):
     with open(template_filename, encoding="utf-8") as file_:
@@ -16,8 +18,8 @@ def render_notification_text(dw_link, user_id):
         "web/templates/mail_notify.html",
         {
             "dw_link": dw_link,
-            "host": "https://dwman.akorz-sw1.duckdns.org/",
-            "unsubscribe": f"https://dwman.akorz-sw1.duckdns.org/app/user/{user_id}",
+            "host": f"{DEPLOY_URL.rstrip('/')}/",
+            "unsubscribe": f"{DEPLOY_URL.rstrip('/')}/app/user/{user_id}",
         },
     )
 
@@ -27,7 +29,7 @@ def render_save_pl_text(dw_link, user_id):
         "web/templates/mail_save_pl.html",
         {
             "dw_link": dw_link,
-            "host": "https://dwman.akorz-sw1.duckdns.org/",
-            "unsubscribe": f"https://dwman.akorz-sw1.duckdns.org/app/user/{user_id}",
+            "host": f"{DEPLOY_URL.rstrip('/')}/",
+            "unsubscribe": f"{DEPLOY_URL.rstrip('/')}/app/user/{user_id}",
         },
     )

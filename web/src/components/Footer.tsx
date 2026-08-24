@@ -1,8 +1,8 @@
+import { Separator } from '@radix-ui/react-dropdown-menu';
 import { FC } from 'react';
 import { emailLogo, githubLogo, telegramLogo } from '../icons/Logos';
-import { EasterEgg } from './EasterEgg';
 import { cn } from '../lib/utils';
-import { Separator } from '@radix-ui/react-dropdown-menu';
+import { EasterEgg } from './EasterEgg';
 
 interface IFooter {
   className?: string;
@@ -21,7 +21,11 @@ const Footer: FC<IFooter> = ({ className }) => {
         <div className="flex gap-3">
           Contact me
           <span>
-            <a href="mailto:akorzunin123@gmail.com" target="_blank">
+            <a
+              href="mailto:akorzunin123@gmail.com"
+              target="_blank"
+              rel="noopener"
+            >
               <img
                 className="img-responsive h-6 w-6 object-cover"
                 src={emailLogo.href}
@@ -32,7 +36,7 @@ const Footer: FC<IFooter> = ({ className }) => {
             </a>
           </span>
           <span>
-            <a href="https://t.me/akorzunin" target="_blank">
+            <a href="https://t.me/akorzunin" target="_blank" rel="noopener">
               <img
                 className="img-responsive h-6 w-6 object-cover"
                 src={telegramLogo.href}
@@ -49,6 +53,7 @@ const Footer: FC<IFooter> = ({ className }) => {
             <a
               href="https://github.com/akorzunin/Spotify_save_DW"
               target="_blank"
+              rel="noopener"
             >
               <img
                 className="img-responsive h-6 w-6 object-cover"

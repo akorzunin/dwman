@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     ports:
-      - ${PORT:-8000}:${PORT:-8000}
+      - ${PORT:-8000}:8000
     env_file:
       - .env
     restart: unless-stopped
@@ -15,7 +15,7 @@ services:
   caddy:
     image: caddy:2-alpine
     environment:
-      - DOMAIN=test-dwman.localhost
+      DOMAIN: ${DOMAIN:-test-dwman.localhost}
     restart: unless-stopped
     ports:
       - "80:80"

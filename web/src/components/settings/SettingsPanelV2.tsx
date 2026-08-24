@@ -1,9 +1,9 @@
 import { useAtomValue } from 'jotai';
+import { cn } from '../../lib/utils';
 import { UserDataAtom } from '../../store/store';
 import AccountStatus from '../UserSettingsField/AccountStatus';
 import SettingsTitle from '../UserSettingsField/SettingsTitle';
 import { SettingsForm } from './SettingsForm';
-import { cn } from '../../lib/utils';
 
 export const SettingsPanelV2 = ({ className }: { className?: string }) => {
   const userData = useAtomValue(UserDataAtom);

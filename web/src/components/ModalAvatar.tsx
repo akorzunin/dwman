@@ -26,14 +26,20 @@ export const ModalAvatar: FC<IModalAvatar> = ({
   }, [isOpen, handleCloseModal]);
   return (
     <div className={isOpen ? 'modal modal_active' : 'modal'}>
-      <img
-        src={img}
-        alt="User icon"
-        className="h-50 cursor-pointer rounded"
+      <button
+        type="button"
+        aria-label="Close avatar"
+        className="border-0 bg-transparent p-0"
         onClick={() => {
           handleCloseModal(false);
         }}
-      />
+      >
+        <img
+          src={img}
+          alt="User icon"
+          className="h-50 cursor-pointer rounded"
+        />
+      </button>
     </div>
   );
 };

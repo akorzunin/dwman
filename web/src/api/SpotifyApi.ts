@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // Grabbed from @types/spotify-api
 
 // Release comments:

@@ -1,9 +1,9 @@
+import { useAtom } from 'jotai';
+import { Plus, X } from 'lucide-react';
 import { FC } from 'react';
 import { Song } from '../../interfaces/Song';
 import { cn } from '../../lib/utils';
-import { useAtom } from 'jotai';
 import { deleteSongSetAtom, SongSetAtom } from '../../store/store';
-import { Plus, X } from 'lucide-react';
 import SongView from './../songs/SongView';
 
 interface ISongCard {
@@ -40,6 +40,7 @@ const SongCard: FC<ISongCard> = ({
       </div>
       <div className="flex gap-x-3">
         <button
+          type="button"
           className={cn(
             'hover:pointer cursor-pointer rounded-md border-2 border-solid p-1 transition hover:border-transparent hover:bg-destructive',
             !isDeletable && 'hidden'
@@ -49,6 +50,7 @@ const SongCard: FC<ISongCard> = ({
           <X />
         </button>
         <button
+          type="button"
           className={cn(
             'hover:pointer cursor-pointer rounded-md border-2 border-solid p-1 transition hover:border-transparent hover:bg-third',
             !isAddable && 'hidden'

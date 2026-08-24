@@ -46,14 +46,14 @@ sudo setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/caddy
 git clone ...
 cp .env.example .env
 task build-web
-uv run src/main.py
+uv run python main.py
 ```
 
 - setup .env values
 - copy/create test db
 - start python and caddy server\
 
-  python src/main.py
+  python main.py
   sudo caddy run --config .\caddy\dev\Caddyfile
 
 ### Frontend
@@ -71,7 +71,7 @@ it will automatically spin up vite dev server at <https://test-dwman.localhost/>
 ### Generate ts client
 
 ```bash
-pnpm dlx openapi-typescript-codegen@0.29.0 --input http://localhost:8000/openapi.json --output ./web/src/api/client --client fetch && pre-commit run --all-files
+pnpm --dir web run generate-api && pre-commit run --all-files
 ```
 
 ## License

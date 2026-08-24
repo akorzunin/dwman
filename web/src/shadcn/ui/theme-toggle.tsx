@@ -1,5 +1,6 @@
 import { Palette } from 'lucide-react';
-
+import { cn } from '../../lib/utils';
+import { Button } from './button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,8 +8,6 @@ import {
   DropdownMenuTrigger,
 } from './dropdown-menu';
 import { ThemeList, useTheme } from './theme-provider';
-import { Button } from './button';
-import { cn } from '../../lib/utils';
 
 export function ModeToggle({ className }: { className?: string }) {
   const { setTheme } = useTheme();

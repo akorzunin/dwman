@@ -1,6 +1,8 @@
-import { FC } from 'react';
-import { cn } from '../../lib/utils';
 import { Menu } from 'lucide-react';
+import { FC } from 'react';
+import { Link } from 'react-router';
+import { OpenAPI } from '../../api/client';
+import { cn } from '../../lib/utils';
 import { Button } from '../../shadcn/ui/button';
 import {
   Sheet,
@@ -8,8 +10,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '../../shadcn/ui/sheet';
-import { Link } from 'react-router';
-import { OpenAPI } from '../../api/client';
 import { Login } from '../buttons/Login';
 
 interface IBurgerMenu {

@@ -1,3 +1,4 @@
+import { Song } from '../../interfaces/Song';
 import { Avatar, AvatarFallback, AvatarImage } from '../../shadcn/ui/avatar';
 import {
   Tooltip,
@@ -5,7 +6,6 @@ import {
   TooltipPositioner,
   TooltipTrigger,
 } from '../../shadcn/ui/tooltip';
-import { Song } from '../../interfaces/Song';
 
 const SongView: React.FC<{ song: Song }> = ({ song }) => {
   return (

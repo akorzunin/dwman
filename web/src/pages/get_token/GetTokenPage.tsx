@@ -1,9 +1,9 @@
 import { FC, useEffect } from 'react';
 
 import { useNavigate, useSearchParams } from 'react-router';
+import { OpenAPI } from '../../api/client';
 import { SpotifyCookie } from '../../interfaces/Cookies';
 import { setCookies } from '../../utils/cookieHandle';
-import { OpenAPI } from '../../api/client';
 
 const handleResponse = async (
   response: Response,

@@ -1,21 +1,19 @@
-import { expect, test } from 'vitest';
 import dayjs from 'dayjs';
-import { vi } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import { generatePlData } from '../../../web/src/utils/apiManager';
-import {
-  getTimeData,
-  getWeekNumber,
-  TimeData,
-} from '../../../web/src/utils/timeMangment';
+import { getTimeData, TimeData } from '../../../web/src/utils/timeMangment';
 
 const testWithTime = test.extend({
+  // biome-ignore lint/correctness/noEmptyPattern: Playwright fixture API requires an object parameter.
   testTime: async ({}, use) => {
     use(dayjs('1970-01-01'));
   },
+  // biome-ignore lint/correctness/noEmptyPattern: Playwright fixture API requires an object parameter.
   testTimeData: async ({}, use) => {
     use(getTimeData(dayjs('1970-01-01').toDate()));
   },
+  // biome-ignore lint/correctness/noEmptyPattern: Playwright fixture API requires an object parameter.
   mockDate: async ({}, use) => {
     vi.stubEnv('TZ', 'UTC');
     vi.useFakeTimers();
@@ -37,28 +35,34 @@ testWithTime('generatePlData default', async ({ testTimeData }: TestTime) => {
   expect(plData.description).toBeDefined();
 });
 
-testWithTime('generatePlData custom', async ({ mockDate }: TestTime) => {
-  const plData = await generatePlData({
-    name: 'test_{year}_{week}',
-    description: 'test description {created}',
-  });
+testWithTime(
+  'generatePlData custom',
+  async ({ mockDate: _mockDate }: TestTime) => {
+    const plData = await generatePlData({
+      name: 'test_{year}_{week}',
+      description: 'test description {created}',
+    });
 
-  expect(plData.name).toBe('test_1970_1');
-  expect(plData.description).toBe('test description 1970-01-01 00:00:00');
-});
+    expect(plData.name).toBe('test_1970_1');
+    expect(plData.description).toBe('test description 1970-01-01 00:00:00');
+  }
+);
 
-testWithTime('generatePlData empty', async ({ mockDate }: TestTime) => {
-  const plData = await generatePlData({});
+testWithTime(
+  'generatePlData empty',
+  async ({ mockDate: _mockDate }: TestTime) => {
+    const plData = await generatePlData({});
 
-  expect(plData.name).toBe('1970_1');
-  expect(plData.description).toBe(
-    'Created at: 1970-01-01T00:00:00.000Z. This playlist was created by dwman (https://github.com/akorzunin/dwman)'
-  );
-});
+    expect(plData.name).toBe('1970_1');
+    expect(plData.description).toBe(
+      'Created at: 1970-01-01T00:00:00.000Z. This playlist was created by dwman (https://github.com/akorzunin/dwman)'
+    );
+  }
+);
 
 testWithTime(
   'generatePlData template items',
-  async ({ mockDate }: TestTime) => {
+  async ({ mockDate: _mockDate }: TestTime) => {
     const plData = await generatePlData({
       description: `{year}
 {month}

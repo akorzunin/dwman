@@ -5,7 +5,7 @@
       "name": "Python: Fast API",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/src/main.py",
+      "program": "${workspaceFolder}/main.py",
       "console": "integratedTerminal",
       "justMyCode": true
     },
@@ -25,21 +25,6 @@
       "webRoot": "${workspaceFolder}/web",
       "userDataDir": "Debug",
       "runtimeArgs": ["--profile-directory=debug-profile"]
-    },
-    {
-      "name": "Docker: Python - Fastapi",
-      "type": "docker",
-      "request": "launch",
-      "preLaunchTask": "docker-run: debug",
-      "python": {
-        "pathMappings": [
-          {
-            "localRoot": "${workspaceFolder}",
-            "remoteRoot": "/app"
-          }
-        ],
-        "projectType": "fastapi"
-      }
     },
     {
       "name": "Python: Debug Tests",

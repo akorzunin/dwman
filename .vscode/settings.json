@@ -20,7 +20,10 @@
     "commandCenter.border": "#15202b99"
   },
   "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "[javascript][javascriptreact][typescript][typescriptreact][json][css]": {
+    "editor.defaultFormatter": "biomejs.biome"
   },
   "python.testing.pytestArgs": [
     ".",

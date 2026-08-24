@@ -130,7 +130,7 @@ export default function SplashCursor({
       const isWebGL2 = 'drawBuffers' in gl;
 
       let supportLinearFiltering = false;
-      let halfFloat = null;
+      let halfFloat: { HALF_FLOAT_OES: number } | null = null;
 
       if (isWebGL2) {
         (gl as WebGL2RenderingContext).getExtension('EXT_color_buffer_float');
@@ -138,7 +138,9 @@ export default function SplashCursor({
           'OES_texture_float_linear'
         );
       } else {
-        halfFloat = gl.getExtension('OES_texture_half_float');
+        halfFloat = gl.getExtension('OES_texture_half_float') as {
+          HALF_FLOAT_OES: number;
+        } | null;
         supportLinearFiltering = !!gl.getExtension(
           'OES_texture_half_float_linear'
         );
@@ -148,11 +150,11 @@ export default function SplashCursor({
 
       const halfFloatTexType = isWebGL2
         ? (gl as WebGL2RenderingContext).HALF_FLOAT
-        : (halfFloat && (halfFloat as any).HALF_FLOAT_OES) || 0;
+        : (halfFloat?.HALF_FLOAT_OES ?? 0);
 
-      let formatRGBA: any;
-      let formatRG: any;
-      let formatR: any;
+      let formatRGBA: { internalFormat: number; format: number } | null;
+      let formatRG: { internalFormat: number; format: number } | null;
+      let formatR: { internalFormat: number; format: number } | null;
 
       if (isWebGL2) {
         formatRGBA = getSupportedFormat(
@@ -334,6 +336,7 @@ export default function SplashCursor({
       }
 
       bind() {
+        // biome-ignore lint/correctness/useHookAtTopLevel: WebGL method, not a React hook.
         if (this.program) gl.useProgram(this.program);
       }
     }
@@ -380,6 +383,7 @@ export default function SplashCursor({
 
       bind() {
         if (this.activeProgram) {
+          // biome-ignore lint/correctness/useHookAtTopLevel: WebGL method, not a React hook.
           gl.useProgram(this.activeProgram);
         }
       }
@@ -888,6 +892,7 @@ export default function SplashCursor({
       const rgba = ext.formatRGBA;
       const rg = ext.formatRG;
       const r = ext.formatR;
+      if (!rgba || !rg || !r) return;
       const filtering = ext.supportLinearFiltering ? gl.LINEAR : gl.NEAREST;
       gl.disable(gl.BLEND);
 

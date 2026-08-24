@@ -1,13 +1,13 @@
-import { readCookies, setCookies } from './cookieHandle';
-import { emptySong, Song } from '../interfaces/Song';
+import dayjs from 'dayjs';
+import { OpenAPI } from '../api/client';
 
 import { SpotifyApi } from '../api/SpotifyApi';
 import { Playback } from '../interfaces/Playback';
-import { getSpotifyUrl } from './utils';
+import { emptySong, Song } from '../interfaces/Song';
 import { getAccessToken } from './auth';
-import { OpenAPI } from '../api/client';
+import { readCookies, setCookies } from './cookieHandle';
 import { getTimeData, TimeData } from './timeMangment';
-import dayjs from 'dayjs';
+import { getSpotifyUrl } from './utils';
 
 const checkStatusCode = (res: Response) => {
   const logErr = (res: Response) => {
@@ -194,7 +194,7 @@ export const getPlayBackSongs = async (
   prevData: Playback
 ): Promise<Playback> => {
   const data = await getUserPlayback();
-  if (!data || !data?.item) {
+  if (data === false || !data.item) {
     console.warn('No user playback');
     const noPlInfo = false;
     const emptySongs = [emptySong];
@@ -221,7 +221,7 @@ export const getPlayBackSongs = async (
   }
 
   let songs: Song[] = [];
-  const prevPlaylistUri = prevData[1] && prevData[1].uri;
+  const prevPlaylistUri = prevData[1] === false ? undefined : prevData[1].uri;
   if (playlistUri && playlistUri !== prevPlaylistUri) {
     // fetch all songs from new playlist
     return await getPlaylistSongs(playlistUri.toString(), currentSong);

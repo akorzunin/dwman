@@ -1,19 +1,19 @@
-import { useState, FC } from 'react';
-import * as apiManager from '../../utils/apiManager';
-import SavePlaylist from '../../components/SavePlaylist';
-import { emptySong } from '../../interfaces/Song';
-import Playlist from '../../components/Playlist';
 import { useQuery } from '@tanstack/react-query';
 import { useAtom, useAtomValue } from 'jotai';
+import { FC, useState } from 'react';
+import { SpotifyApi } from '../../api/SpotifyApi';
+import Playlist from '../../components/Playlist';
+import SavePlaylist from '../../components/SavePlaylist';
+import { SettingsPanelV2 } from '../../components/settings/SettingsPanelV2';
+import { emptySong } from '../../interfaces/Song';
+import { cn } from '../../lib/utils';
 import {
   CurrentSongAtom,
   listenPlaybackAtom,
   PlaylistSongsAtom,
   SongSetAtom,
 } from '../../store/store';
-import { cn } from '../../lib/utils';
-import { SpotifyApi } from '../../api/SpotifyApi';
-import { SettingsPanelV2 } from '../../components/settings/SettingsPanelV2';
+import * as apiManager from '../../utils/apiManager';
 
 export const UserPage: FC = () => {
   const [PlSongs, setPlSongs] = useAtom(PlaylistSongsAtom);

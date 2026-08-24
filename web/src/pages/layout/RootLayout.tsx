@@ -1,14 +1,14 @@
-import { Link, Outlet, useParams } from 'react-router';
-import Footer from '../../components/Footer';
-import { Button } from '../../shadcn/ui/button';
-import { ModeToggle } from '../../shadcn/ui/theme-toggle';
-import { OpenAPI } from '../../api/client';
-import UserCard from '../../components/UserCard';
 import { useAtomValue } from 'jotai';
-import { CurrentSongAtom } from '../../store/store';
+import { Link, Outlet, useParams } from 'react-router';
+import { OpenAPI } from '../../api/client';
+import { Login } from '../../components/buttons/Login';
+import Footer from '../../components/Footer';
 import BurgerMenu from '../../components/menu/BurgerMenu';
 import HeaderSongCard from '../../components/songs/HeaderSongCard';
-import { Login } from '../../components/buttons/Login';
+import UserCard from '../../components/UserCard';
+import { Button } from '../../shadcn/ui/button';
+import { ModeToggle } from '../../shadcn/ui/theme-toggle';
+import { CurrentSongAtom } from '../../store/store';
 
 export function RootLayout() {
   const { userId } = useParams();

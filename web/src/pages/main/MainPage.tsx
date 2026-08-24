@@ -1,12 +1,11 @@
 /// <reference types="vite/client" />
 
-import { FC } from 'react';
-
-// import BlobButton from '../../components/buttons/blob-button/BlobButton';
-import * as cookieHandle from '../../utils/cookieHandle';
 import { useQuery } from '@tanstack/react-query';
+import { FC } from 'react';
 import { OpenAPI } from '../../api/client';
 import BlobButtonV2 from '../../components/buttons/BlobButtonV2';
+// import BlobButton from '../../components/buttons/blob-button/BlobButton';
+import * as cookieHandle from '../../utils/cookieHandle';
 
 export const MainPage: FC = () => {
   // getUserQuery

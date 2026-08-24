@@ -1,8 +1,7 @@
 import Cookies from 'universal-cookie';
-import { SpotifyCookie } from '../interfaces/Cookies';
-import { SpotifyCookieKeys } from '../interfaces/Cookies';
-import { getSpotifyUrl } from './utils';
+import { SpotifyCookie, SpotifyCookieKeys } from '../interfaces/Cookies';
 import { getAccessToken } from './auth';
+import { getSpotifyUrl } from './utils';
 
 export const setCookies = (cookies: SpotifyCookie) => {
   const cookiesLib = new Cookies();

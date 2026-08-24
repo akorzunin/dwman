@@ -1,7 +1,7 @@
 // playwright unit test
 import { expect, test } from 'vitest';
-import { SongSet } from '../../../web/src/utils/songSet';
 import { Song } from '../../../web/src/interfaces/Song';
+import { SongSet } from '../../../web/src/utils/songSet';
 
 const songs: Song[] = [
   {
@@ -25,6 +25,7 @@ const songs: Song[] = [
 ];
 
 export const songSetTest = test.extend({
+  // biome-ignore lint/correctness/noEmptyPattern: Playwright fixture API requires an object parameter.
   songSet: async ({}, use) => {
     const songSet = new SongSet();
     songSet.add(songs[0]);

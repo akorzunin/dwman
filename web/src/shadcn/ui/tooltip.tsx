@@ -82,8 +82,8 @@ function TooltipArrow({ className, ...props }: TooltipPrimitive.Arrow.Props) {
 
 export {
   Tooltip,
-  TooltipTrigger,
   TooltipContent,
-  TooltipProvider,
   TooltipPositioner,
+  TooltipProvider,
+  TooltipTrigger,
 };

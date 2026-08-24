@@ -1,10 +1,10 @@
+import { useAtom } from 'jotai';
+import { Ear, EarOff, Plus } from 'lucide-react';
 import { FC } from 'react';
 import { Song } from '../../interfaces/Song';
 import { cn } from '../../lib/utils';
-import { useAtom } from 'jotai';
-import { listenPlaybackAtom, SongSetAtom } from '../../store/store';
-import { Ear, EarOff, Plus } from 'lucide-react';
 import { Button } from '../../shadcn/ui/button';
+import { listenPlaybackAtom, SongSetAtom } from '../../store/store';
 import SongView from './../songs/SongView';
 
 interface ISongCard {

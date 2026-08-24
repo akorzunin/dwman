@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -11,6 +10,6 @@ export const DummyPage = () => {
       console.log('redirect');
       navigate('/app');
     }
-  }, []);
+  }, [navigate]);
   return <div>DummyPage</div>;
 };

@@ -22,7 +22,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["black>=23.3.0,<24"]
+dev = ["ruff>=0.14.10,<0.15"]
 test = [
     "pytest>=9.0.2,<10",
     "pytest-asyncio>=1.3.0,<2",
@@ -38,8 +38,9 @@ default-groups = ["test"]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.black]
+[tool.ruff]
 line-length = 80
+target-version = "py314"
 
 [tool.ruff.lint]
 select = [
@@ -51,18 +52,15 @@ select = [
     "B", # flake8-bugbear
 ]
 ignore = [
-    "E501", # line too long, handled by black
+    "E501", # line too long, handled by ruff format
     "B008", # do not perform function calls in argument defaults
     "C901", # too complex
     "C408", # unnecessary-collection-call
     "E712", # true-false-comparison (only for TinyDB queries)
 ]
 
-[tool.isort]
-profile = "black"
-
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.14"
 warn_unused_configs = true
 warn_unused_ignores = false
 warn_redundant_casts = true

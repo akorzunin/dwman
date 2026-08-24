@@ -1,13 +1,13 @@
-import { FC } from 'react';
-import { WeekCounter } from './WeekCounter';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'react-router';
-import { getUserData } from '../utils/apiManager';
-import { Avatar, AvatarFallback, AvatarImage } from '../shadcn/ui/avatar';
-import { formatFollowerNumber } from '../utils/utils';
-import { getOrCreateUser } from '../utils/dbManager';
-import { UserDataAtom } from '../store/store';
 import { useAtom } from 'jotai/react';
+import { FC } from 'react';
+import { useParams } from 'react-router';
+import { Avatar, AvatarFallback, AvatarImage } from '../shadcn/ui/avatar';
+import { UserDataAtom } from '../store/store';
+import { getUserData } from '../utils/apiManager';
+import { getOrCreateUser } from '../utils/dbManager';
+import { formatFollowerNumber } from '../utils/utils';
+import { WeekCounter } from './WeekCounter';
 
 const UserCard: FC = () => {
   const { userId } = useParams();
