@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
-import { expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-import { generatePlData } from '../../../web/src/utils/apiManager';
+import { generatePlData, saveUserPl } from '../../../web/src/utils/apiManager';
 import { getTimeData, TimeData } from '../../../web/src/utils/timeMangment';
 
 const testWithTime = test.extend({
@@ -28,6 +28,23 @@ interface TestTime {
   testTimeData: TimeData;
   mockDate: Date;
 }
+
+const storage = new Map<string, string>();
+
+beforeEach(() => {
+  vi.stubGlobal('localStorage', {
+    clear: () => storage.clear(),
+    getItem: (key: string) => storage.get(key) ?? null,
+    removeItem: (key: string) => storage.delete(key),
+    setItem: (key: string, value: string) => storage.set(key, value),
+  });
+});
+
+afterEach(() => {
+  storage.clear();
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 testWithTime('generatePlData default', async ({ testTimeData }: TestTime) => {
   const plData = await generatePlData({ date: testTimeData });
@@ -59,6 +76,58 @@ testWithTime(
     );
   }
 );
+
+test('saveUserPl uses current Spotify playlist endpoints', async () => {
+  localStorage.setItem('access_token', 'token');
+  localStorage.setItem('expired_at', dayjs().add(1, 'hour').toISOString());
+  const fetchMock = vi
+    .fn()
+    .mockResolvedValueOnce(
+      new Response(JSON.stringify({ id: 'playlist-id' }), { status: 201 })
+    )
+    .mockResolvedValueOnce(
+      new Response(JSON.stringify({ snapshot_id: 'snapshot-id' }), {
+        status: 201,
+      })
+    );
+  vi.stubGlobal('fetch', fetchMock);
+
+  const [data, error] = await saveUserPl({
+    songs: [
+      {
+        name: 'Song',
+        artists: ['Artist'],
+        imgUrl: '',
+        id: 'spotify:track:track-id',
+      },
+    ],
+  });
+
+  expect(error).toBeNull();
+  expect(data).toEqual({ snapshot_id: 'snapshot-id' });
+  expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+    '/api/spotify/v1/me/playlists',
+    '/api/spotify/v1/playlists/playlist-id/items',
+  ]);
+  expect(fetchMock.mock.calls[1][1]?.body).toBe(
+    JSON.stringify({ uris: ['spotify:track:track-id'] })
+  );
+});
+
+test('saveUserPl handles non-JSON Spotify errors', async () => {
+  localStorage.setItem('access_token', 'token');
+  localStorage.setItem('expired_at', dayjs().add(1, 'hour').toISOString());
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue(new Response('Not Found', { status: 404 }))
+  );
+
+  const [data, error] = await saveUserPl({ songs: [] });
+
+  expect(data).toBeNull();
+  expect(error?.message).toBe('Cant create playlist, status: 404');
+});
 
 testWithTime(
   'generatePlData template items',

@@ -9,33 +9,14 @@ import { readCookies, setCookies } from './cookieHandle';
 import { getTimeData, TimeData } from './timeMangment';
 import { getSpotifyUrl } from './utils';
 
-const checkStatusCode = (res: Response) => {
-  const logErr = (res: Response) => {
-    res.json().then((err) => {
-      console.table(err.error);
-    });
-  };
-  if (res.status > 399) {
-    if (res.status === 401) {
-      console.error('Token is invalid trying to refresh');
-      logErr(res);
-      refreshToken();
-      return false;
-    }
-    if (res.status === 403) {
-      console.error('Need paid user for that');
-      logErr(res);
-      return false;
-    }
-    if (res.status === 503) {
-      // somtimes happening for no reason
-      // probably cause of packet loss or sth like that
-      console.warn('Connection error');
-      return false;
-    }
-  }
+const checkStatusCode = async (res: Response) => {
+  if (res.ok) return true;
 
-  return true;
+  console.error(
+    `Spotify API request failed (${res.status}): ${await res.text()}`
+  );
+  if (res.status === 401) refreshToken();
+  return false;
 };
 
 export const refreshToken = () => {
@@ -117,7 +98,7 @@ export const getUserPlayback = async () => {
     console.info('No content');
     return false;
   }
-  if (checkStatusCode(res)) {
+  if (await checkStatusCode(res)) {
     const data = (await res.json()) as SpotifyApi.CurrentlyPlayingObject;
     return data;
   }
@@ -335,44 +316,44 @@ export const saveUserPl = async ({
 }: IsaveUserPl): Promise<
   [SpotifyApi.AddTracksToPlaylistResponse | null, Error | null]
 > => {
-  // Create new playlist
-  const userData = await getUserData();
-  if (!userData.id) {
-    return [null, Error('No user id')];
+  const uris = songs
+    .map((song) => song.id ?? song.uri)
+    .filter((uri): uri is string => Boolean(uri));
+  if (songs.length > 0 && uris.length === 0) {
+    return [null, Error('No valid Spotify track URIs')];
   }
+
+  // Create new playlist
   const token = await getAccessToken();
-  const res = await fetch(
-    getSpotifyUrl(`/v1/users/${userData.id}/playlists`, false),
-    {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        ...(await generatePlData({
-          name: playlistName,
-          description: playlistDescription,
-          songs: songs,
-          kaomoji: kaomoji,
-        })),
-        public: true,
-      }),
-    }
-  );
-  if (!checkStatusCode(res)) {
+  const res = await fetch(getSpotifyUrl('/v1/me/playlists', false), {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      ...(await generatePlData({
+        name: playlistName,
+        description: playlistDescription,
+        songs: songs,
+        kaomoji: kaomoji,
+      })),
+      public: true,
+    }),
+  });
+  if (!(await checkStatusCode(res))) {
     return [null, Error(`Cant create playlist, status: ${res.status}`)];
   }
   const resData = (await res.json()) as SpotifyApi.CreatePlaylistResponse;
   if (songs.length === 0) {
     return [resData, null];
   }
-  // wait some time before spotify create playlist
+  // Spotify may reject adding items immediately after playlist creation.
   await new Promise((resolve) => setTimeout(resolve, 500));
   // add songs to playlist
   const plRes = await fetch(
-    getSpotifyUrl(`/v1/playlists/${resData.id}/tracks`, false),
+    getSpotifyUrl(`/v1/playlists/${resData.id}/items`, false),
     {
       method: 'POST',
       headers: {
@@ -380,18 +361,10 @@ export const saveUserPl = async ({
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        uris: songs.map((x) => {
-          if (x.id) {
-            return x.id;
-          } else {
-            return x.uri;
-          }
-        }),
-      }),
+      body: JSON.stringify({ uris }),
     }
   );
-  if (!checkStatusCode(plRes)) {
+  if (!(await checkStatusCode(plRes))) {
     return [null, Error(`Cant add songs to playlist, status: ${plRes.status}`)];
   }
   const data = (await plRes.json()) as SpotifyApi.AddTracksToPlaylistResponse;

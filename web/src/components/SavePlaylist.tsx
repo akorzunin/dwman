@@ -80,9 +80,15 @@ const SavePlaylist: FC<{ className?: string }> = ({ className }) => {
     }, 5000);
     let songs = currentSongs.items;
     if (full) {
-      songs = PlaylistSongs;
+      songs = PlaylistSongs.filter((song) => song.id || song.uri);
+      if (songs.length === 0) songs = currentSongs.items;
     } else if (empty) {
       songs = [];
+    }
+    if (!empty && songs.length === 0) {
+      setSavePlState('No tracks');
+      console.error('No collected tracks to save');
+      return;
     }
     const [data, err] = await saveUserPl({
       songs,

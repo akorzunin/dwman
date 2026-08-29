@@ -7,7 +7,6 @@ allowed_headers = (
     "content-type",
     "authorization",
     "user-agent",
-    "accept-encoding",
 )
 
 router = APIRouter(tags=["proxy API"])
