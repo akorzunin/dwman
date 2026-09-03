@@ -27,8 +27,9 @@ const GetTokenPage: FC = () => {
   const navigate = useNavigate();
   useEffect(() => {
     const codeParam = searchParams.get('code');
-    if (!codeParam) {
-      throw new Error('No code for auth request');
+    const stateParam = searchParams.get('state');
+    if (!codeParam || !stateParam) {
+      throw new Error('No code or state for auth request');
     }
     if (sent) {
       return;
@@ -38,9 +39,10 @@ const GetTokenPage: FC = () => {
       `${OpenAPI.BASE}/get_token?` +
         new URLSearchParams({
           code: codeParam,
+          state: stateParam,
           redirect: 'false',
         }),
-      { method: 'GET' }
+      { method: 'GET', credentials: 'include' }
     )
       .then((response) => handleResponse(response, navigate))
       .catch((err) => console.error(err));

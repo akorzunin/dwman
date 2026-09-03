@@ -90,6 +90,10 @@ def test_refresh_token_without_rotation_preserves_existing_token(
     client: TestClient,
 ):
     user, _ = setup_user(client)
+    users = app.dependency_overrides[get_users_table]()
+    original_hash = users.get(
+        lambda value: value["user_id"] == user["user_id"]
+    )["refresh_token_hash"]
     with mock.patch(
         "internal.app.routes.api_routes.get_access_token",
         return_value={
@@ -105,10 +109,9 @@ def test_refresh_token_without_rotation_preserves_existing_token(
 
     assert response.status_code == 202
     assert "refresh_token" not in response.json()
-    users = app.dependency_overrides[get_users_table]()
     stored_user = users.get(lambda value: value["user_id"] == user["user_id"])
     assert stored_user["refresh_token"] == "rt_123"
-    assert stored_user["refresh_token_hash"] == user["refresh_token_hash"]
+    assert stored_user["refresh_token_hash"] == original_hash
 
 
 def test_refresh_token_spotify_error_is_not_success_or_secret_leak(
@@ -166,11 +169,12 @@ def test_update_user_ok(client: TestClient):
         "send_mail",
         "email",
         "is_premium",
-        "refresh_token",
         "dw_playlist_id",
         "tg_chat_id",
     ]:
         assert resp.json()[k] == payload[k]
+    assert "refresh_token" not in resp.json()
+    assert "refresh_token_hash" not in resp.json()
 
 
 def test_update_user_not_found(client):
@@ -195,6 +199,37 @@ def test_notify_user_ok(client: TestClient):
     assert resp.json()["message"] == "notification has been sent"
 
 
+def test_notification_requires_authentication(client: TestClient):
+    response = client.post(
+        "/api/test-notification",
+        json={"tg_chat_id": "tg_123", "subject": "test", "text": "test"},
+    )
+
+    assert response.status_code == 401
+
+
+def test_user_cannot_notify_another_users_chat(client: TestClient):
+    setup_user(client, tg_chat_id="tg_123")
+    client.post(
+        "/api/new_user",
+        json={
+            "user_id": "other-user",
+            "is_premium": False,
+            "refresh_token": "other-token",
+            "refresh_token_hash": "other-pass",
+            "tg_chat_id": "tg_other",
+        },
+    )
+
+    response = client.post(
+        "/api/test-notification",
+        json={"tg_chat_id": "tg_other", "subject": "test", "text": "test"},
+        auth=auth("u123"),
+    )
+
+    assert response.status_code == 403
+
+
 def test_update_user_custome_description(client: TestClient):
     pl_name = "test_pattern_{year}_{month}_{day}"
     pl_desc = "test_pattern_desc_{year}_{month}_{day}"
@@ -216,3 +251,66 @@ def test_update_user_custome_description(client: TestClient):
     assert resp.status_code == 200
     assert resp.json()["custom_pl_name_pattern"] == pl_name
     assert resp.json()["custom_pl_description_pattern"] == pl_desc
+
+
+def test_user_cannot_read_another_users_record(client: TestClient):
+    setup_user(client)
+    client.post(
+        "/api/new_user",
+        json={
+            "user_id": "other-user",
+            "is_premium": False,
+            "refresh_token": "other-token",
+            "refresh_token_hash": "other-pass",
+        },
+    )
+
+    response = client.get(
+        "/api/user",
+        params={"user_id": "other-user"},
+        auth=auth("u123"),
+    )
+
+    assert response.status_code == 403
+
+
+def test_user_cannot_update_another_users_record(client: TestClient):
+    setup_user(client)
+    client.post(
+        "/api/new_user",
+        json={
+            "user_id": "other-user",
+            "is_premium": False,
+            "refresh_token": "other-token",
+            "refresh_token_hash": "other-pass",
+        },
+    )
+
+    response = client.put(
+        "/api/update_user",
+        params={"user_id": "other-user"},
+        json={"email": "hijacked@example.com"},
+        auth=auth("u123"),
+    )
+
+    assert response.status_code == 403
+
+
+def test_user_responses_never_expose_refresh_tokens(client: TestClient):
+    created, create_response = setup_user(client)
+    fetched = client.get(
+        "/api/user",
+        params={"user_id": created["user_id"]},
+        auth=auth(created["user_id"]),
+    )
+    updated = client.put(
+        "/api/update_user",
+        params={"user_id": created["user_id"]},
+        json={"email": "safe@example.com"},
+        auth=auth(created["user_id"]),
+    )
+
+    for response in (create_response, fetched, updated):
+        assert response.status_code == 200
+        assert "refresh_token" not in response.json()
+        assert "refresh_token_hash" not in response.json()

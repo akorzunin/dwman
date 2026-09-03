@@ -34,9 +34,9 @@ async def send_notifications_task(time_overrides: dict | None = None):
     curr_hour = dt.hour
     curr_minute = dt.minute
     if time_overrides:
-        curr_weekday = time_overrides["weekday"]
-        curr_hour = time_overrides["hour"]
-        curr_minute = time_overrides["minute"]
+        curr_weekday = time_overrides.get("weekday", curr_weekday)
+        curr_hour = time_overrides.get("hour", curr_hour)
+        curr_minute = time_overrides.get("minute", curr_minute)
     users_to_nofify = users.search(where("send_mail") == True)
     notified_users = []
     for db_user in users_to_nofify:
@@ -106,10 +106,10 @@ def manage_user_tasks(user: shemas.User) -> Optional[shemas.Message]:
     if not user.send_mail:
         schedule.clear(get_tag(user.user_id, "notify"))
 
-    if user.send_mail and schedule.get_jobs(
+    if user.send_mail and not schedule.get_jobs(
         get_tag(user.user_id, "notify"),
     ):
-        # create notify task if task is not exists
+        # Create a notification task only if it does not exist.
         task = user_notify_task(user)  # type: ignore
         logger.info(
             f"[New Notify Task] Next run: {str(task.next_run)} "

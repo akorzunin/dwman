@@ -55,6 +55,25 @@ class User(BaseUser, CommonUser):
             return str(value)
 
 
+class PublicUser(BaseUser):
+    user_id: str
+    created_at: str
+    send_mail: bool = False
+    email: Optional[EmailStr | Literal[""]] = None
+    send_time: Optional[str] = None
+    is_premium: bool
+    tg_chat_id: str | None = None
+    custom_pl_name_pattern: str | None = None
+    custom_pl_description_pattern: str | None = None
+
+    @field_validator("send_time", "created_at", mode="before")
+    def parse_dates(cls, value):
+        if value is None or isinstance(value, str):
+            return value
+        assert isinstance(value, datetime)
+        return str(value)
+
+
 class CreateUser(BaseUser, CommonUser):
     user_id: str
     send_mail: bool = False

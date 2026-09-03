@@ -11,6 +11,7 @@ import {
   SheetTrigger,
 } from '../../shadcn/ui/sheet';
 import { Login } from '../buttons/Login';
+import { LogoutButton } from '../buttons/LogoutButton';
 
 interface IBurgerMenu {
   className?: string;
@@ -39,9 +40,7 @@ const BurgerMenu: FC<IBurgerMenu> = ({ className, userId }) => {
               <Button asChild>
                 <Link to="/app/">Home</Link>
               </Button>
-              <Button variant="destructive" asChild>
-                <Link to={'/app/'}>Logout</Link>
-              </Button>
+              <LogoutButton />
             </>
           ) : (
             <Login basePath={OpenAPI.BASE} />

@@ -2,6 +2,7 @@ import { useAtomValue } from 'jotai';
 import { Link, Outlet, useParams } from 'react-router';
 import { OpenAPI } from '../../api/client';
 import { Login } from '../../components/buttons/Login';
+import { LogoutButton } from '../../components/buttons/LogoutButton';
 import Footer from '../../components/Footer';
 import BurgerMenu from '../../components/menu/BurgerMenu';
 import HeaderSongCard from '../../components/songs/HeaderSongCard';
@@ -34,9 +35,7 @@ export function RootLayout() {
                 <Button asChild>
                   <Link to="/app/help">Help</Link>
                 </Button>
-                <Button variant="destructive" asChild>
-                  <Link to={'/app/'}>Logout</Link>
-                </Button>
+                <LogoutButton />
                 <ModeToggle />
               </div>
             </div>

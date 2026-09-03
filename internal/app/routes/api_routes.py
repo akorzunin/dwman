@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Annotated, Literal
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -27,8 +27,19 @@ router = APIRouter(
 user_router = APIRouter(
     prefix="/api",
     tags=["User"],
-    dependencies=[Depends(check_user_credentials)],
 )
+
+AuthenticatedUser = Annotated[shemas.User, Depends(check_user_credentials)]
+
+
+def enforce_self_access(
+    requested_user_id: str, authenticated_user: shemas.User
+) -> None:
+    if requested_user_id != authenticated_user.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot access another user",
+        )
 
 
 logger = structlog.stdlib.get_logger(__name__)
@@ -121,7 +132,7 @@ class UserEmail(BaseModel):
 
 @router.post(
     "/new_user",
-    response_model=shemas.User,
+    response_model=shemas.PublicUser,
     responses={status.HTTP_400_BAD_REQUEST: {"model": shemas.Message}},
 )
 async def create_user(user: shemas.CreateUser, users: UsersTable):
@@ -136,8 +147,17 @@ async def create_user(user: shemas.CreateUser, users: UsersTable):
 
 
 @user_router.post("/test-notification")
-async def test_notification(msg: UserEmail, users: UsersTable):
-    """Test save email"""
+async def test_notification(
+    msg: UserEmail,
+    users: UsersTable,
+    authenticated_user: AuthenticatedUser,
+):
+    """Send a test notification for the authenticated user."""
+    if msg.tg_chat_id != authenticated_user.tg_chat_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot notify another user",
+        )
     try:
         user = crud.get_user_by_tg_chat_id(users, msg.tg_chat_id)
     except Exception as e:
@@ -160,10 +180,15 @@ async def test_notification(msg: UserEmail, users: UsersTable):
         # status.HTTP_200_OK: {"model": shemas.User},
         status.HTTP_404_NOT_FOUND: {"model": shemas.Message},
     },
-    # response_model=shemas.User,
+    response_model=shemas.PublicUser,
 )
-async def get_user(user_id: str, users: UsersTable):
-    """Get user by user_id"""
+async def get_user(
+    user_id: str,
+    users: UsersTable,
+    authenticated_user: AuthenticatedUser,
+):
+    """Get the authenticated user's data."""
+    enforce_self_access(user_id, authenticated_user)
     if user := crud.get_user(users, user_id):
         return user
     return JSONResponse(
@@ -174,13 +199,19 @@ async def get_user(user_id: str, users: UsersTable):
 
 @user_router.put(
     "/update_user",
-    response_model=shemas.User,
+    response_model=shemas.PublicUser,
     responses={
         status.HTTP_404_NOT_FOUND: {"model": shemas.Message},
     },
 )
-async def update_user(user: shemas.UpdateUser, user_id: str, users: UsersTable):
-    """Update user"""
+async def update_user(
+    user: shemas.UpdateUser,
+    user_id: str,
+    users: UsersTable,
+    authenticated_user: AuthenticatedUser,
+):
+    """Update the authenticated user."""
+    enforce_self_access(user_id, authenticated_user)
     try:
         updated_user = crud.update_user(users, user, user_id)
         if not updated_user:
@@ -204,7 +235,7 @@ admin_router = APIRouter(
 
 @admin_router.get(
     "/users",
-    response_model=list[shemas.User],
+    response_model=list[shemas.PublicUser],
 )
 async def get_users(users: UsersTable):
     """Get all users from database"""

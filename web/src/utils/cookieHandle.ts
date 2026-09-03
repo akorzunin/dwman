@@ -7,7 +7,11 @@ export const setCookies = (cookies: SpotifyCookie) => {
   const cookiesLib = new Cookies();
   SpotifyCookieKeys.forEach((key) => {
     if (cookies[key]) {
-      cookiesLib.set(key, cookies[key], { path: '/' });
+      cookiesLib.set(key, cookies[key], {
+        path: '/',
+        sameSite: 'lax',
+        secure: window.location.protocol === 'https:',
+      });
     }
   });
 };

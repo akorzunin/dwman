@@ -2,6 +2,7 @@ from unittest import mock
 
 import bcrypt
 import pytest
+import schedule
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
 from tinydb import TinyDB, where
@@ -121,3 +122,33 @@ async def test_send_notifications_task(setup_user: shemas.User):
     weekday, time = res["curr_date"].split(" ")
     assert weekday == "6"
     assert time.startswith("14:")
+
+
+@pytest.mark.asyncio
+async def test_send_notifications_task_accepts_partial_overrides(setup_user):
+    with mock.patch("requests.post"):
+        result = await send_notifications_task({"weekday": 6, "hour": 14})
+    assert result["curr_date"].startswith("6 14:")
+
+
+def test_manage_user_tasks_creates_only_missing_job(setup_user):
+    from internal.app.task_handler import get_tag, manage_user_tasks
+
+    schedule.clear()
+    try:
+        with mock.patch(
+            "internal.app.task_handler.render_notification_text",
+            return_value="notification",
+        ):
+            manage_user_tasks(setup_user)
+            assert (
+                len(schedule.get_jobs(get_tag(setup_user.user_id, "notify")))
+                == 1
+            )
+            manage_user_tasks(setup_user)
+            assert (
+                len(schedule.get_jobs(get_tag(setup_user.user_id, "notify")))
+                == 1
+            )
+    finally:
+        schedule.clear()

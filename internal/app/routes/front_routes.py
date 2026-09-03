@@ -1,5 +1,5 @@
+import secrets
 from datetime import datetime
-from random import randint
 from typing import Literal
 from urllib.parse import urlencode
 
@@ -60,16 +60,13 @@ async def user_page(request: Request, user_id: str):
 
 
 def new_state() -> str:
-    """Generate state for auth code flow"""
-    return "".join(chr(randint(33, 126)) for i in range(16))
+    """Generate an unpredictable OAuth state value."""
+    return secrets.token_urlsafe(32)
 
 
-def get_redirect_url(referer: str | None) -> str:
-    if not referer:
-        return SPOTIPY_REDIRECT_URL
-    method, url = referer.split("//")
-    redirect_uri = method + "//" + url.split("/")[0]
-    return f"{redirect_uri}/get_token"
+def get_redirect_url() -> str:
+    """Use the redirect URI registered with Spotify."""
+    return SPOTIPY_REDIRECT_URL
 
 
 @router.get(
@@ -83,9 +80,9 @@ async def login_url(
     show_dialog: Literal["true", "false"] = "false",
 ):
     """Redirect to Spotify login page"""
-    if not state:
-        state = new_state()
-    redirect_uri = get_redirect_url(req.headers.get("Referer"))
+    # Never accept caller-selected state: it would defeat CSRF protection.
+    state = new_state()
+    redirect_uri = get_redirect_url()
     logger.info(f"Redirecting to login page from {redirect_uri}")
     r = requests.Request(
         "GET",
@@ -104,7 +101,16 @@ async def login_url(
     url = r.prepare().url
     if not url:
         raise ValueError("Could not generate login url")
-    return RedirectResponse(url)
+    response = RedirectResponse(url)
+    response.set_cookie(
+        "oauth_session",
+        state,
+        httponly=True,
+        secure=redirect_uri.startswith("https://"),
+        samesite="lax",
+        max_age=600,
+    )
+    return response
 
 
 @router.get(
@@ -121,8 +127,23 @@ async def login_redirect(
     "/get_token",
     status_code=status.HTTP_300_MULTIPLE_CHOICES,
 )
-async def get_token(req: Request, code: str, redirect: bool = True):
-    redirect_uri = get_redirect_url(req.headers.get("Referer"))
+async def get_token(
+    req: Request,
+    code: str,
+    state: str | None = None,
+    redirect: bool = True,
+):
+    expected_state = req.cookies.get("oauth_session")
+    if (
+        not state
+        or not expected_state
+        or not secrets.compare_digest(state, expected_state)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid OAuth state",
+        )
+    redirect_uri = get_redirect_url()
     try:
         response = requests.post(
             "https://accounts.spotify.com/api/token",
@@ -162,7 +183,11 @@ async def get_token(req: Request, code: str, redirect: bool = True):
         logger.info("SENDING token_data")
         return token_data
     res = RedirectResponse(f"/app/user/{user_id}")
+    res.delete_cookie("oauth_session", path="/")
+    secure = redirect_uri.startswith("https://")
     for k, v in token_data.items():
-        res.set_cookie(k, v)
+        # The current Spotify client reads these values in the browser.
+        # A future BFF/session migration can make them HttpOnly.
+        res.set_cookie(k, v, secure=secure, samesite="lax", path="/")
     logger.info("SENDING redirect response")
     return res

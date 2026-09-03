@@ -17,8 +17,8 @@ SPOTIPY_REDIRECT_URL: str = os.environ["SPOTIPY_REDIRECT_URL"]
 SPOTIPY_CLIENT_ID: str = os.environ["SPOTIPY_CLIENT_ID"]
 SPOTIPY_CLIENT_SECRET: str = os.environ["SPOTIPY_CLIENT_SECRET"]
 
-API_LOGIN = os.getenv("API_LOGIN", "admin")
-API_PASSWORD = os.getenv("API_PASSWORD", "admin")
+API_LOGIN: str = os.environ["API_LOGIN"]
+API_PASSWORD: str = os.environ["API_PASSWORD"]
 
 TG_BOT_TOKEN = os.getenv("TG_BOT_TOKEN")
 TG_LIVE_TEST = os.getenv("TG_LIVE_TEST", "False") in _true_values
