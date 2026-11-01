@@ -12,6 +12,8 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 ### pydantic
 from pydantic import BaseModel
 
+from internal.app import crud
+from internal.app.db_connector import UsersTable
 from internal.app.utils import SpotifyTokenError, parse_spotify_token_response
 from internal.scope import scope_str
 from internal.settings import (
@@ -129,6 +131,7 @@ async def login_redirect(
 )
 async def get_token(
     req: Request,
+    users: UsersTable,
     code: str,
     state: str | None = None,
     redirect: bool = True,
@@ -177,6 +180,11 @@ async def get_token(
     token_data = dict(token_data) | {"get_time": str(datetime.now())}
     sp = spotipy.Spotify(auth=token_data["access_token"])
     user_id = sp.current_user()["id"]
+    if (refresh_token := token_data.get("refresh_token")) and crud.get_user(
+        users, user_id
+    ):
+        # Spotify verified this identity; rebind auth without resetting settings.
+        crud.update_refresh_token(users, user_id, refresh_token)
     if not redirect:
         # NOTE request w/o redirect only user for vite dev server
         token_data |= {"user_id": user_id}
