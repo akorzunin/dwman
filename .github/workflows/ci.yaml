@@ -144,8 +144,12 @@ jobs:
         id: vars
         run: echo "sha_short=sha-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
       - name: Install Ansible with Vault-backed SSH agent support
-        run: pipx install --force --include-deps 'ansible>=12,<13'
+        run: pipx install --force --python python3.12 --include-deps 'ansible>=12,<13'
 
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v5
