@@ -144,6 +144,9 @@ jobs:
         id: vars
         run: echo "sha_short=sha-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
+      - name: Install Ansible with Vault-backed SSH agent support
+        run: pipx install --force --include-deps 'ansible>=12,<13'
+
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v5
         with:
@@ -153,11 +156,14 @@ jobs:
             [defaults]
             callbacks_enabled = ansible.posix.profile_tasks, ansible.posix.timer
             callback_result_format = yaml
-            interpreter_python = /usr/bin/python
+            interpreter_python = /usr/bin/python3
+            [connection]
+            ssh_agent = auto
             [ssh_connection]
             retries=5
           vault_password: ${{ secrets.ANSIBLE_PASS }}
           inventory: ${{ secrets.ANSIBLE_HOSTS }}
+          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
           options: |
             --limit ${{ vars.SERVER_GROUP }}
             --verbose
