@@ -13,7 +13,7 @@ export class ApiService {
   /**
    * Refresh Token
    * @param requestBody
-   * @returns any Successful Response
+   * @returns SpotifyToken Successful Response
    * @throws ApiError
    */
   public static refreshTokenApiRefreshTokenPost(

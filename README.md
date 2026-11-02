@@ -28,33 +28,34 @@ Test server: <https://test-dwman.akorz-nt1.duckdns.org/>
 
 ### Backend
 
-Dependencies:
+Requires Go 1.26+, Node 24, pnpm, and optionally Task/Caddy.
 
 ```sh
-python
-uv
-caddy
-```
-
-Caddy setup on linux:
-
-```sh
-sudo setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/caddy
-```
-
-```sh
-git clone ...
 cp .env.example .env
-task build-web
-uv run python main.py
+# Fill in Spotify credentials, redirect URL, and admin credentials.
+pnpm --dir web install --frozen-lockfile
+pnpm --dir web run build
+# Task loads .env; the Go binary itself reads environment variables only.
+task debug-backend
 ```
 
-- setup .env values
-- copy/create test db
-- start python and caddy server\
+Without Task, export the values from `.env`, then run `go run ./cmd/dwman`.
+The backend listens on port 8000 by default and serves the built frontend at
+`http://localhost:8000/app/`. For local HTTPS, run `task caddy-dev`.
 
-  python main.py
-  sudo caddy run --config .\caddy\dev\Caddyfile
+```sh
+go test -race ./...
+go vet ./...
+CGO_ENABLED=0 go build -trimpath -o dwman ./cmd/dwman
+docker compose up --build
+```
+
+The backend uses Go's standard HTTP library, JSON-file persistence compatible
+with the existing TinyDB database, and bcrypt for existing credentials. OAuth,
+the Spotify proxy, settings, Telegram reminders, and admin endpoints remain.
+Inactive backend auto-save, email templates, and duplicate schedulers are gone.
+See [backend migration and measurements](docs/backend.md) before replacing an
+existing instance. Do not run the Python and Go versions against the same file.
 
 ### Frontend
 
@@ -71,7 +72,7 @@ it will automatically spin up vite dev server at <https://test-dwman.localhost/>
 ### Generate ts client
 
 ```bash
-pnpm --dir web run generate-api && pre-commit run --all-files
+pnpm --dir web run generate-api && prek run --all-files
 ```
 
 ## License

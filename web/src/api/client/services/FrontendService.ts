@@ -108,12 +108,14 @@ export class FrontendService {
   /**
    * Get Token
    * @param code
+   * @param state
    * @param redirect
    * @returns void
    * @throws ApiError
    */
   public static getTokenGetTokenGet(
     code: string,
+    state?: string | null,
     redirect: boolean = true
   ): CancelablePromise<void> {
     return __request(OpenAPI, {
@@ -121,6 +123,7 @@ export class FrontendService {
       url: '/get_token',
       query: {
         code: code,
+        state: state,
         redirect: redirect,
       },
       errors: {

@@ -1,4 +1,6 @@
 # custom
+/dwman
+/coverage.out
 .idea/
 **/deprecated
 **/database

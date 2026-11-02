@@ -3,37 +3,26 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable pnpm
 WORKDIR /frontend
-COPY ["web/package.json", "./"]
-COPY ["web/pnpm-lock.yaml", "./"]
-COPY ["web/pnpm-workspace.yaml", "./"]
+COPY ["web/package.json", "web/pnpm-lock.yaml", "web/pnpm-workspace.yaml", "./"]
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 COPY ["web", "./"]
 RUN pnpm run build
 
-FROM python:3.14-slim AS runner
+FROM golang:1.26-alpine AS backend
+RUN apk add --no-cache ca-certificates
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
+COPY cmd ./cmd
+COPY internal/backend ./internal/backend
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /dwman ./cmd/dwman
 
-RUN apt-get update && \
-	apt-get install -y curl && \
-	apt-get clean && rm -rf /var/lib/apt/lists/*
-
-ENV PYTHONFAULTHANDLER=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=off
-
-COPY --from=ghcr.io/astral-sh/uv:0.9.3 /uv /uvx /bin/
-
+FROM scratch AS runner
 WORKDIR /app
-
-RUN --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-cache
-
-# Creating folders, and files for a project:
-COPY ["main.py", "./main.py"]
-COPY ["internal", "./internal"]
-COPY --from=frontend ["/frontend/dist", "./web/dist"]
-
+COPY --from=backend /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=backend /dwman ./dwman
+COPY --from=frontend /frontend/dist ./web/dist
 EXPOSE 8000
-
-CMD [".venv/bin/python", "main.py"]
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD ["/app/dwman", "healthcheck"]
+ENTRYPOINT ["/app/dwman"]

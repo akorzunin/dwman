@@ -2,6 +2,8 @@ version: "3"
 
 output: "prefixed"
 
+dotenv: [".env"]
+
 tasks:
   caddy-dev:
     desc: Run Caddy server with dev configuration
@@ -64,11 +66,11 @@ tasks:
     interactive: true
     aliases:
       - db
-    desc: Start Python backend application
+    desc: Start Go backend application
     env:
       LOG_LEVEL: ERROR
     cmds:
-      - uv run python -m uvicorn main:app --reload --no-access-log
+      - go run ./cmd/dwman
 
   debug-full:
     aliases:
@@ -103,7 +105,7 @@ tasks:
       - tb
     desc: Run backend tests
     interactive: true
-    cmd: uv run pytest . -vv
+    cmd: go test -race ./...
 
   test-frontend:
     aliases:

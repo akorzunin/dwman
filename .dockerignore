@@ -23,3 +23,14 @@
 **/secrets.dev.yaml
 **/values.dev.yaml
 README.md
+.env
+.env.*
+data
+.ansible
+.ansible_pass
+.coverage*
+.pytest_cache
+.mypy_cache
+.ruff_cache
+web/dist
+dwman

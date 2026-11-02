@@ -21,9 +21,9 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-go@v6
         with:
-          python-version: "3.14"
+          go-version-file: go.mod
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -62,21 +62,16 @@ jobs:
         run: pnpm exec playwright test -c tests/playwright-ct.config.ts --project=chromium
 
   tests-backend:
-    name: run pytest tests
+    name: test Go backend
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-go@v6
         with:
-          python-version: "3.14"
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          version: "0.9.5"
-      - name: Sync Python dependencies
-        run: uv sync --locked --all-extras --dev
-      - name: Run pytest tests
-        run: uv run pytest . --color=yes
+          go-version-file: go.mod
+      - run: go vet ./...
+      - run: go test -race ./...
+      - run: CGO_ENABLED=0 go build ./cmd/dwman
 
   build_and_push_to_registry:
     name: Push Docker image to Docker Hub

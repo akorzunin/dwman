@@ -11,7 +11,7 @@ import { request as __request } from '../core/request';
 export class UserService {
   /**
    * Test Notification
-   * Test save email
+   * Send a test notification for the authenticated user.
    * @param requestBody
    * @returns any Successful Response
    * @throws ApiError
@@ -31,12 +31,12 @@ export class UserService {
   }
   /**
    * Get User
-   * Get user by user_id
+   * Get the authenticated user's data.
    * @param userId
-   * @returns any Successful Response
+   * @returns User Successful Response
    * @throws ApiError
    */
-  public static getUserApiUserGet(userId: string): CancelablePromise<any> {
+  public static getUserApiUserGet(userId: string): CancelablePromise<User> {
     return __request(OpenAPI, {
       method: 'GET',
       url: '/api/user',
@@ -51,7 +51,7 @@ export class UserService {
   }
   /**
    * Update User
-   * Update user
+   * Update the authenticated user.
    * @param userId
    * @param requestBody
    * @returns User Successful Response

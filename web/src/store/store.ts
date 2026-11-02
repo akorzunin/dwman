@@ -41,7 +41,6 @@ export const clrearSongSetAtom = atom(null, (_get, set) => {
 export const UserDataAtom = atom<User>({
   user_id: '',
   is_premium: false,
-  refresh_token: '',
   created_at: '',
   email: '',
   send_time: '',

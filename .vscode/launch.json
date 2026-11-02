@@ -2,20 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python: Fast API",
-      "type": "debugpy",
+      "name": "Go: backend",
+      "type": "go",
       "request": "launch",
-      "program": "${workspaceFolder}/main.py",
-      "console": "integratedTerminal",
-      "justMyCode": true
-    },
-    {
-      "name": "Python: Current File",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${file}",
-      "console": "integratedTerminal",
-      "justMyCode": true
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/dwman",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env"
     },
     {
       "type": "chrome",
@@ -25,15 +18,6 @@
       "webRoot": "${workspaceFolder}/web",
       "userDataDir": "Debug",
       "runtimeArgs": ["--profile-directory=debug-profile"]
-    },
-    {
-      "name": "Python: Debug Tests",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${file}",
-      "purpose": ["debug-test"],
-      "console": "integratedTerminal",
-      // "justMyCode": false,
     }
   ]
 }
