@@ -1,0 +1,129 @@
+---
+- name: Back up the live Go DWMan database through the controller
+  hosts: "{{ backup_target | default('localhost') }}"
+  gather_facts: false
+  any_errors_fatal: true
+  vars_files: [test.yml]
+  vars:
+    ansible_host_key_checking: true
+    backup_db_remote_root: dropbox-remote:ssh/dwman/backups
+    backup_db_remote_dir: "{{ backup_db_remote_root }}/{{ inventory_hostname }}/{{ migration_container }}"
+    backup_db_rclone_limits: [--contimeout, 15s, --timeout, 60s, --retries, '2']
+  tasks:
+    - name: Require one explicit host and a DWMan database on a cloud remote
+      ansible.builtin.assert:
+        that:
+          - backup_target is defined and inventory_hostname == backup_target
+          - inventory_hostname != 'localhost' and ansible_play_hosts_all | length == 1
+          - migration_environment is match('^[a-z0-9][a-z0-9-]*$')
+          - migration_project_dir == '/srv/deploy/dwman-' ~ migration_environment
+          - migration_container == 'dwman-' ~ migration_environment
+          - backup_db_remote_root is match('^[a-zA-Z0-9_-]+:[^:]+$')
+          - not ansible_check_mode
+
+    - name: Check the controller's rclone access before reading credentials from the DB
+      ansible.builtin.command:
+        argv: >-
+          {{ ['rclone', 'lsf', backup_db_remote_root.split(':')[0] ~ ':', '--max-depth', '1', '--dirs-only'] + backup_db_rclone_limits }}
+      delegate_to: localhost
+      become: false
+      changed_when: false
+      no_log: true
+
+    # The Go store atomically renames a complete document. A single read sees one
+    # complete version; use backup.yml for old in-place writers or a full archive.
+    - name: Require the running Go app with its expected database bind mount
+      ansible.builtin.command:
+        argv:
+          - /usr/bin/python3
+          - -c
+          - |
+            import json, subprocess, sys
+            container, path = sys.argv[1:]
+            info, = json.loads(subprocess.check_output(['docker', 'inspect', container]))
+            config = info['Config']
+            env = dict(item.split('=', 1) for item in config['Env'])
+            assert info['State']['Running'] and config['Entrypoint'] == ['/app/dwman']
+            data_path = env.get('DATA_PATH', 'data/db.json')
+            assert data_path == '/app/data/db.json' or (data_path == 'data/db.json' and config['WorkingDir'] == '/app')
+            assert any(m['Type'] == 'bind' and m['Source'] == path and m['Destination'] == '/app/data'
+                       for m in info['Mounts'])
+          - "{{ migration_container }}"
+          - "{{ migration_project_dir }}/data"
+      become: true
+      changed_when: false
+
+    - name: Read the database once without writing plaintext to the controller filesystem
+      ansible.builtin.slurp:
+        src: "{{ migration_project_dir }}/data/db.json"
+      become: true
+      register: backup_db_snapshot
+      no_log: true
+
+    - name: Encrypt, upload and verify on the controller
+      delegate_to: localhost
+      become: false
+      block:
+        - name: Create private staging for ciphertext only
+          ansible.builtin.tempfile:
+            state: directory
+            prefix: dwman-db-
+          register: backup_db_stage
+
+        - name: Choose a unique cloud object name
+          ansible.builtin.set_fact:
+            backup_db_filename: "db-{{ now(utc=true, fmt='%Y%m%dT%H%M%SZ') }}-{{ backup_db_stage.path | basename }}.json.vault"
+
+        - name: Validate JSON and verify the Vault round trip without exposing records
+          vars:
+            # Stream command arguments rather than staging a module containing the DB.
+            ansible_pipelining: true
+          ansible.builtin.command:
+            argv:
+              - "{{ ansible_playbook_python }}"
+              - -c
+              - |
+                import base64, hashlib, json, os, subprocess, sys
+                password_file, output = sys.argv[1:]
+                data = base64.b64decode(sys.stdin.buffer.read(), validate=True)
+                db = json.loads(data)
+                assert isinstance(db, dict) and isinstance(db.get('users', {}), dict)
+                os.umask(0o077)
+                cmd = ['ansible-vault', 'encrypt', '--vault-password-file', password_file, '--output', output]
+                subprocess.run(cmd, input=data, check=True, capture_output=True)
+                cmd = ['ansible-vault', 'decrypt', '--vault-password-file', password_file, '--output', '-', output]
+                assert subprocess.check_output(cmd) == data, 'Vault round-trip mismatch'
+                with open(output, 'rb') as archive:
+                    print(json.dumps({'db_bytes': len(data), 'users': len(db.get('users', {})),
+                                      'encrypted_sha256': hashlib.file_digest(archive, 'sha256').hexdigest()}))
+              - "{{ migration_vault_password_file }}"
+              - "{{ backup_db_stage.path }}/{{ backup_db_filename }}"
+            stdin: "{{ backup_db_snapshot.content }}"
+            stdin_add_newline: false
+          register: backup_db_report
+          changed_when: true
+          no_log: true
+
+        - name: Upload ciphertext without overwriting a different backup
+          ansible.builtin.command:
+            argv: >-
+              {{ ['rclone', 'copyto', backup_db_stage.path ~ '/' ~ backup_db_filename,
+                  backup_db_remote_dir ~ '/' ~ backup_db_filename, '--immutable'] + backup_db_rclone_limits }}
+          changed_when: true
+
+        - name: Download and compare the encrypted cloud bytes
+          ansible.builtin.command:
+            argv: "{{ ['rclone', 'check', backup_db_stage.path, backup_db_remote_dir, '--download', '--one-way'] + backup_db_rclone_limits }}"
+          changed_when: false
+
+        - name: Report the verified backup without printing any DB records
+          ansible.builtin.debug:
+            msg:
+              object: "{{ backup_db_remote_dir }}/{{ backup_db_filename }}"
+              verification: "{{ backup_db_report.stdout | from_json }}"
+      always:
+        - name: Remove temporary ciphertext staging
+          ansible.builtin.file:
+            path: "{{ backup_db_stage.path }}"
+            state: absent
+          when: backup_db_stage.path is defined

@@ -1,0 +1,56 @@
+---
+# Run after cutover/manual app validation, while deployment Actions remain paused.
+# gh uses the controller login; no GitHub credential is stored in Ansible vars.
+- name: Hand off one validated migration to its GitHub environment
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  any_errors_fatal: true
+  vars_files: [test.yml]
+  vars:
+    migration_github_apply: false
+    migration_url: "https://{{ migration_domain }}"
+    migration_github_variables:
+      SERVER_GROUP: "{{ migration_destination }}"
+      DEPLOY_URL: "{{ migration_url }}"
+      PORT: "{{ migration_port | string }}"
+  tasks:
+    - name: Validate the scoped GitHub target
+      ansible.builtin.assert:
+        that:
+          - migration_destination in hostvars
+          - migration_source in hostvars
+          - migration_source != migration_destination
+          - migration_source != 'localhost' and migration_destination != 'localhost'
+          - migration_domain is match('^[a-z0-9][a-z0-9-]*\.duckdns\.org$')
+          - migration_environment == 'test'
+          - migration_github_repo is match('^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$')
+          - migration_destination is match('^[a-zA-Z0-9][a-zA-Z0-9_-]*$')
+          - ansible_limit is not defined
+          - not ansible_check_mode
+        fail_msg: This handoff intentionally supports only test; no --limit/--check.
+
+    - name: Read the existing GitHub environment without creating one implicitly
+      ansible.builtin.command:
+        argv: [gh, api, "repos/{{ migration_github_repo }}/environments/{{ migration_environment }}", --jq, .name]
+      changed_when: false
+
+    - name: Read existing environment variables
+      ansible.builtin.command:
+        argv: [gh, variable, list, --repo, "{{ migration_github_repo }}", --env, "{{ migration_environment }}", --json, 'name,value']
+      register: migration_github_before
+      changed_when: false
+
+    - name: Report the proposed GitHub handoff
+      ansible.builtin.debug:
+        msg:
+          repository: "{{ migration_github_repo }}"
+          environment: "{{ migration_environment }}"
+          current_variables: "{{ migration_github_before.stdout | from_json }}"
+          proposed_variables: "{{ migration_github_variables }}"
+          proposed_secrets: [ANSIBLE_HOSTS, ANSIBLE_PASS, SSH_KNOWN_HOSTS]
+          apply: "{{ migration_github_apply | bool }}"
+
+    - name: Apply only after a completed migration and explicit acknowledgement
+      ansible.builtin.include_tasks: github-handoff-apply.yml
+      when: migration_github_apply | bool

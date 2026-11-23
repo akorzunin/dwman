@@ -1,0 +1,43 @@
+---
+# One supervised backup at a time; the shared role restores initial container state.
+- name: Back up one DWMan deployment to an existing rclone cloud remote
+  hosts: "{{ backup_target | default('localhost') }}"
+  gather_facts: false
+  become: true
+  any_errors_fatal: true
+  vars_files: [test.yml]
+  vars:
+    ansible_host_key_checking: true
+    ansible_ssh_host_key_checking: true
+    # Include Compose/.env alongside data so the DB can actually be recovered.
+    backup_service: "dwman-{{ migration_environment }}"
+    backup_paths: ["{{ migration_project_dir }}"]
+  pre_tasks:
+    - name: Require one explicit host and the DWMan service directory
+      ansible.builtin.assert:
+        that:
+          - backup_target is defined
+          - backup_target | default('') != 'localhost'
+          - inventory_hostname == backup_target
+          - ansible_play_hosts_all | length == 1
+          - not ansible_check_mode
+          - migration_environment is match('^[a-z0-9][a-z0-9-]*$')
+          - migration_project_dir == '/srv/deploy/dwman-' ~ migration_environment
+          - backup_service == 'dwman-' ~ migration_environment
+          - backup_paths == [migration_project_dir]
+        fail_msg: >-
+          Pass -e backup_target=dyn1 and use one inventory alias. This wrapper backs up
+          only the selected DWMan environment, never /srv/deploy or unrelated services.
+
+    - name: Require acknowledgement of secret-bearing cloud storage and brief downtime
+      ansible.builtin.assert:
+        that: backup_confirm | default('') == backup_target ~ ':' ~ migration_environment
+        fail_msg: >-
+          Pass -e backup_confirm=<host>:<environment> after checking cloud access controls
+          and encryption. Archives contain Spotify credentials and deployment secrets.
+
+  tasks:
+    # Explicit sibling-repo path avoids vendoring or relying on the controller's role search path.
+    - name: Reuse the infrastructure consistent-snapshot and verified-upload role # noqa: role-name[path]
+      ansible.builtin.include_role:
+        name: "{{ migration_infra_dir }}/roles/backup"

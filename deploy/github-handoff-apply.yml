@@ -1,0 +1,202 @@
+---
+- name: Require migration and deployment freeze acknowledgements
+  ansible.builtin.assert:
+    that:
+      - migration_confirm | default('') == migration_source ~ ':' ~ migration_destination ~ ':' ~ migration_environment
+      - migration_ci_paused | default(false) | bool
+      - migration_spotify_registered | default(false) | bool
+      - migration_app_validated | default(false) | bool
+      - migration_github_key_file | length > 0
+    fail_msg: Complete cutover and app checks, keep CI paused, and supply the explicit acknowledgements.
+
+- name: Refuse a handoff while a branch workflow is queued or running
+  ansible.builtin.command:
+    argv:
+      - gh
+      - api
+      - --method
+      - GET
+      - "repos/{{ migration_github_repo }}/actions/runs"
+      - -f
+      - "branch={{ migration_environment }}"
+      - -f
+      - "status={{ item }}"
+      - --jq
+      - .total_count
+  loop: [queued, in_progress, waiting, pending, requested]
+  register: migration_github_active
+  changed_when: false
+  failed_when: migration_github_active.rc != 0 or migration_github_active.stdout | trim != '0'
+
+- name: Select SSH transport for both remote inventory hosts
+  ansible.builtin.add_host:
+    name: "{{ item }}"
+    ansible_connection: ssh
+  loop: "{{ [migration_source, migration_destination] }}"
+  changed_when: false
+
+- name: Require the source container still stopped
+  ansible.builtin.command:
+    argv: [docker, inspect, --format, "{{ '{{.State.Running}}' }}", "{{ migration_container }}"]
+  delegate_to: "{{ migration_source }}"
+  become: true
+  register: migration_handoff_source
+  changed_when: false
+  failed_when: migration_handoff_source.stdout != 'false'
+
+- name: Require the destination container still healthy
+  ansible.builtin.command:
+    argv: [docker, inspect, --format, "{{ '{{.State.Health.Status}}' }}", "{{ migration_container }}"]
+  delegate_to: "{{ migration_destination }}"
+  become: true
+  register: migration_handoff_health
+  changed_when: false
+  failed_when: migration_handoff_health.stdout != 'healthy'
+
+- name: Require a matching migration receipt
+  ansible.builtin.slurp:
+    src: "{{ migration_project_dir }}/migration.json"
+  delegate_to: "{{ migration_destination }}"
+  become: true
+  register: migration_handoff_receipt
+
+- name: Check receipt and public DNS before changing deployment credentials
+  vars:
+    receipt: "{{ migration_handoff_receipt.content | b64decode | from_json }}"
+  ansible.builtin.assert:
+    that:
+      - receipt.source == migration_source
+      - receipt.destination == migration_destination
+      - receipt.domain == migration_domain
+
+- name: Verify public DNS still points only at the destination
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_playbook_python }}"
+      - -c
+      - >-
+        import socket,sys;
+        assert {r[4][0] for r in socket.getaddrinfo(sys.argv[1],443)} == {sys.argv[2]}
+      - "{{ migration_domain }}"
+      - "{{ migration_destination_ipv4 }}"
+  changed_when: false
+
+- name: Verify public TLS and application health
+  ansible.builtin.uri:
+    url: "{{ migration_url }}/health"
+    use_proxy: false
+    validate_certs: true
+    follow_redirects: none
+
+- name: Build a portable one-host inventory with no controller filesystem paths
+  ansible.builtin.set_fact:
+    migration_github_host:
+      ansible_host: "{{ hostvars[migration_destination].ansible_host }}"
+      ansible_port: "{{ hostvars[migration_destination].ansible_port | default(22) | int }}"
+      ansible_user: "{{ hostvars[migration_destination].ansible_user }}"
+      ansible_python_interpreter: /usr/bin/python3
+      ansible_host_key_checking: true
+      # Dynamic administrator has sudo, not direct Docker socket access.
+      ansible_become: true
+      ansible_become_flags: -n
+      # Keep common_args free: the CI action supplies its known_hosts there.
+      ansible_ssh_extra_args: -o StrictHostKeyChecking=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=3
+      ansible_private_key: "{{ lookup('ansible.builtin.file', migration_github_key_file) }}"
+    migration_github_pins: "{{ lookup('ansible.builtin.file', migration_github_known_hosts_file) }}"
+  no_log: true
+
+# Ansible templates values, not mapping keys. Build the hostname key in Jinja.
+- name: Build the inventory with a resolved host alias
+  ansible.builtin.set_fact:
+    migration_github_inventory: "{{ {'all': {'hosts': {migration_destination: migration_github_host}}} }}"
+  no_log: true
+
+- name: Verify supplied pin file actually covers the destination address
+  ansible.builtin.command:
+    argv:
+      - ssh-keygen
+      - -F
+      - "{{ hostvars[migration_destination].ansible_host if hostvars[migration_destination].ansible_port | default(22) | int == 22
+            else '[' ~ hostvars[migration_destination].ansible_host ~ ']:' ~ hostvars[migration_destination].ansible_port }}"
+      - -f
+      - "{{ migration_github_known_hosts_file }}"
+  changed_when: false
+  no_log: true
+
+- name: Vault-encrypt the scoped inventory before uploading it
+  ansible.builtin.command:
+    argv:
+      - ansible-vault
+      - encrypt
+      - --vault-password-file
+      - "{{ migration_vault_password_file }}"
+      - --output
+      - '-'
+    stdin: "{{ migration_github_inventory | to_nice_yaml }}"
+    stdin_add_newline: false
+  register: migration_github_encrypted_inventory
+  changed_when: false
+  no_log: true
+
+# Keep plaintext key material in process memory/stdin, not argv or temp files.
+# GitHub cannot read existing secret values; interrupted handoff is not atomic.
+# Keep CI paused and rerun the entire handoff after correcting any failure.
+- name: Upload only the scoped inventory and administrator host pins
+  ansible.builtin.command:
+    argv: [gh, secret, set, "{{ item.name }}", --repo, "{{ migration_github_repo }}", --env, "{{ migration_environment }}"]
+    stdin: "{{ item.value }}"
+    stdin_add_newline: false
+  loop:
+    - name: ANSIBLE_HOSTS
+      value: "{{ migration_github_encrypted_inventory.stdout }}"
+    - name: SSH_KNOWN_HOSTS
+      value: "{{ migration_github_pins }}"
+  changed_when: true
+  no_log: true
+
+# The encrypted inventory contains only this host's SSH key, not the complete
+# infra inventory or other Vault secrets. The CI action decrypts it with this password.
+- name: Upload the inventory Vault password through stdin only
+  ansible.builtin.command:
+    argv: [gh, secret, set, ANSIBLE_PASS, --repo, "{{ migration_github_repo }}", --env, "{{ migration_environment }}"]
+    stdin: "{{ lookup('ansible.builtin.file', migration_vault_password_file) }}"
+    stdin_add_newline: false
+  changed_when: true
+  no_log: true
+
+- name: Set only the migration-owned environment variables
+  ansible.builtin.command:
+    argv:
+      - gh
+      - variable
+      - set
+      - "{{ item.key }}"
+      - --repo
+      - "{{ migration_github_repo }}"
+      - --env
+      - "{{ migration_environment }}"
+      - --body
+      - "{{ item.value }}"
+  loop: "{{ migration_github_variables | dict2items }}"
+  changed_when: true
+
+- name: Read back GitHub variables
+  ansible.builtin.command:
+    argv: [gh, variable, list, --repo, "{{ migration_github_repo }}", --env, "{{ migration_environment }}", --json, 'name,value']
+  register: migration_github_after
+  changed_when: false
+
+- name: Verify every requested variable
+  vars:
+    actual: "{{ migration_github_after.stdout | from_json | items2dict(key_name='name', value_name='value') }}"
+  ansible.builtin.assert:
+    that: actual[item.key] == item.value
+  loop: "{{ migration_github_variables | dict2items }}"
+
+- name: Report completed handoff without resuming deployments automatically
+  ansible.builtin.debug:
+    msg: >-
+      Updated ONLY {{ migration_github_repo }} environment {{ migration_environment }}.
+      App credentials and IGNORE_CORS are unchanged. Keep snapshots; resume deployment
+      Actions explicitly when ready. GitHub secret values cannot be read back; validate
+      the next supervised deployment before retiring source data.

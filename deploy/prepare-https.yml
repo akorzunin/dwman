@@ -1,0 +1,50 @@
+---
+# Does not start Caddy: dedicated VPN nodes must enter shared HTTPS mode first.
+- name: Stage a DWMan site for the infrastructure-owned HTTPS router
+  hosts: "{{ migration_destination | default('dyn1') }}"
+  gather_facts: false
+  become: true
+  vars_files: [test.yml]
+  tasks:
+    - name: Require one destination and explicit preparation acknowledgement
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+          - migration_prepare_https | default(false) | bool
+          - migration_domain is match('^[a-z0-9][a-z0-9-]*\.duckdns\.org$')
+          - not ansible_check_mode
+
+    - name: Create persistent Caddy directories
+      ansible.builtin.file:
+        path: "{{ migration_caddy_dir }}/{{ item }}"
+        state: directory
+        mode: "0755"
+      loop: [config, config/sites, caddy_data, caddy_config]
+
+    - name: Check for an existing Caddy Compose definition
+      ansible.builtin.stat:
+        path: "{{ migration_caddy_dir }}/compose.yaml"
+      register: migration_existing_caddy
+
+    - name: Stage the existing infrastructure Caddy Compose pattern on a new router only
+      ansible.builtin.copy:
+        src: "{{ migration_infra_dir }}/node/ge2/caddy/compose.yaml"
+        dest: "{{ migration_caddy_dir }}/compose.yaml"
+        mode: "0644"
+      when: not migration_existing_caddy.stat.exists
+
+    - name: Stage the service site without replacing the combined VPN router
+      ansible.builtin.copy:
+        dest: "{{ migration_caddy_dir }}/config/sites/dwman-{{ migration_environment }}.caddy"
+        mode: "0644"
+        content: |
+          {{ migration_domain }} {
+              reverse_proxy 127.0.0.1:{{ migration_port }}
+          }
+
+    - name: Report infrastructure handoff
+      ansible.builtin.debug:
+        msg: >-
+          Site staged only. Configure shared HTTPS through ansible-playbooks and rerun
+          the node VPN deployment before migration preflight; see deploy/README.md.
+          Never start stock Caddy alongside a dedicated VPN listener on 443.

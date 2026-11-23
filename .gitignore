@@ -147,5 +147,8 @@ dmypy.json
 web/src/components/index.ts
 usr_data.json
 web/static/images/Ai_Nav.png
+# Local encrypted migration snapshots and controller artifacts
+.local/
+
 data/db.json
 .aider*

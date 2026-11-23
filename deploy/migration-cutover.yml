@@ -1,0 +1,120 @@
+---
+- name: Read the staging receipt
+  ansible.builtin.slurp:
+    src: "{{ migration_project_dir }}/migration.json"
+  delegate_to: "{{ migration_destination }}"
+  become: true
+  register: migration_receipt
+  no_log: true
+
+- name: Require a matching completed staging operation
+  vars:
+    receipt: "{{ migration_receipt.content | b64decode | from_json }}"
+  ansible.builtin.assert:
+    that:
+      - receipt.source == migration_source
+      - receipt.destination == migration_destination
+      - receipt.domain == migration_domain
+
+- name: Load shared Vault-backed DNS credentials locally
+  ansible.builtin.include_vars:
+    file: "{{ migration_external_vars_file }}"
+    name: migration_external
+  no_log: true
+
+- name: Normalize the shared token without exposing it
+  ansible.builtin.set_fact:
+    migration_duckdns_token: "{{ migration_external.DUCKDNS_TOKEN | default('') | trim }}"
+  no_log: true
+
+- name: Require a decrypted DuckDNS token
+  ansible.builtin.assert:
+    that:
+      - migration_duckdns_token | length > 0
+      - migration_duckdns_token is not search('\s')
+      - "'$ANSIBLE_VAULT;' not in migration_duckdns_token"
+  no_log: true
+
+# Deliberate downtime: ACME needs DNS pointed at the new router. Use DNS-01
+# certificate staging before requiring zero-downtime moves.
+- name: Update only the stable service IPv4
+  ansible.builtin.uri:
+    url: >-
+      {{ 'https://www.duckdns.org/update?domains=' ~ migration_domain.split('.')[0] ~
+         '&token=' ~ (migration_duckdns_token | urlencode) ~
+         '&ip=' ~ (migration_destination_ipv4 | urlencode) ~ '&verbose=true' }}
+    return_content: true
+    use_proxy: false
+    follow_redirects: none
+    timeout: 30
+  register: migration_dns_update
+  failed_when: false
+  no_log: true
+
+- name: Require DuckDNS to accept the update
+  ansible.builtin.assert:
+    that:
+      - migration_dns_update.status | default(0) == 200
+      - (migration_dns_update.content | default('')).splitlines() | first | default('') == 'OK'
+    fail_msg: DuckDNS update failed. Keep source stopped and CI paused; DNS may already have changed. Inspect before retrying.
+
+- name: Wait until the service resolves only to the destination
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_playbook_python }}"
+      - -c
+      - >-
+        import socket,sys;
+        assert {r[4][0] for r in socket.getaddrinfo(sys.argv[1],443)} == {sys.argv[2]}
+      - "{{ migration_domain }}"
+      - "{{ migration_destination_ipv4 }}"
+  changed_when: false
+  register: migration_dns_check
+  until: migration_dns_check.rc == 0
+  retries: 30
+  delay: 10
+
+- name: Verify public TLS and application health with normal certificate validation
+  ansible.builtin.uri:
+    url: "{{ migration_url }}/health"
+    use_proxy: false
+    validate_certs: true
+    follow_redirects: none
+    timeout: 15
+  register: migration_https
+  until: migration_https.status | default(0) == 200
+  retries: 30
+  delay: 10
+
+- name: Verify the public login uses the stable callback
+  ansible.builtin.uri:
+    url: "{{ migration_url }}/login"
+    use_proxy: false
+    validate_certs: true
+    follow_redirects: none
+    status_code: [302, 307]
+  register: migration_login
+  no_log: true
+
+- name: Check callback without logging OAuth state
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_playbook_python }}"
+      - -c
+      - >-
+        import sys,urllib.parse as u;
+        url=u.urlsplit(sys.argv[1]);
+        assert url.scheme == 'https' and url.netloc == 'accounts.spotify.com';
+        assert u.parse_qs(url.query).get('redirect_uri') == [sys.argv[2]]
+      - "{{ migration_login.location | default('') }}"
+      - "{{ migration_url }}/get_token"
+  changed_when: false
+  no_log: true
+
+- name: Report the remaining validation and GitHub handoff
+  ansible.builtin.debug:
+    msg: >-
+      HTTPS, health and callback passed. Source is still stopped. Test Spotify login,
+      settings, playlist saving and Telegram. Then run github-handoff.yml to update
+      ONLY the GitHub test environment inventory/pins and deployment variables before
+      resuming Actions. Keep the encrypted snapshot and source data; do not restart the source.

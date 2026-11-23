@@ -1,0 +1,159 @@
+---
+# One supervised controller only. Pause Actions before stage; no distributed lock.
+- name: Migrate one DWMan instance between inventory hosts
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  any_errors_fatal: true
+  vars_files: [test.yml]
+  vars:
+    migration_action: preflight
+    migration_confirm: ""
+    migration_ci_paused: false
+    migration_spotify_registered: false
+    migration_url: "https://{{ migration_domain }}"
+  tasks:
+    - name: Require explicit hosts and a supported operation
+      ansible.builtin.assert:
+        that:
+          - migration_action in ['preflight', 'stage', 'cutover']
+          - migration_source in hostvars
+          - migration_destination in hostvars
+          - migration_source != migration_destination
+          - migration_source != 'localhost' and migration_destination != 'localhost'
+          - migration_environment is match('^[a-z0-9][a-z0-9-]*$')
+          - migration_domain is match('^[a-z0-9][a-z0-9-]*\.duckdns\.org$')
+          - migration_project_dir == '/srv/deploy/dwman-' ~ migration_environment
+          - migration_port | int > 1024 and migration_port | int < 65536
+          - ansible_limit is not defined
+          - not ansible_check_mode
+        fail_msg: Use explicit inventory aliases, no --limit or --check. Default operation is read-only preflight.
+
+    - name: Require acknowledgement before any changes
+      ansible.builtin.assert:
+        that:
+          - migration_confirm == migration_source ~ ':' ~ migration_destination ~ ':' ~ migration_environment
+          - migration_ci_paused | bool
+          - migration_spotify_registered | bool
+        fail_msg: Pause deployment Actions and register the stable Spotify callback first; see deploy/README.md.
+      when: migration_action != 'preflight'
+
+    - name: Validate destination public IPv4 locally
+      ansible.builtin.command:
+        argv:
+          - "{{ ansible_playbook_python }}"
+          - -c
+          - "import ipaddress,sys; assert ipaddress.IPv4Address(sys.argv[1]).is_global"
+          - "{{ migration_destination_ipv4 }}"
+      changed_when: false
+
+    # The controller play uses local transport; delegation must not inherit it.
+    - name: Select SSH transport for both remote inventory hosts
+      ansible.builtin.add_host:
+        name: "{{ item }}"
+        ansible_connection: ssh
+      loop: "{{ [migration_source, migration_destination] }}"
+      changed_when: false
+
+    - name: Inspect both application containers without exposing their environment
+      ansible.builtin.command:
+        argv: [docker, inspect, "{{ migration_container }}"]
+      delegate_to: "{{ item }}"
+      become: true
+      loop: "{{ [migration_source, migration_destination] }}"
+      register: migration_inspections
+      failed_when: false
+      changed_when: false
+      no_log: true
+
+    - name: Require a readable source container
+      ansible.builtin.assert:
+        that: migration_inspections.results[0].rc == 0
+        fail_msg: Cannot inspect the source container. Check inventory, sudo, Docker and the container name.
+
+    - name: Keep source metadata private
+      ansible.builtin.set_fact:
+        migration_source_info: "{{ (migration_inspections.results[0].stdout | from_json)[0] }}"
+      no_log: true
+
+    - name: Require the expected source bind mount and deployment state
+      ansible.builtin.assert:
+        that:
+          - >-
+            migration_source_info.Mounts | selectattr('Destination', 'equalto', '/app/data') |
+            selectattr('Source', 'equalto', migration_project_dir ~ '/data') |
+            selectattr('Type', 'equalto', 'bind') | list | length == 1
+          - migration_source_info.State.Running == (migration_action != 'cutover')
+          - migration_source_info.Config.Healthcheck.Test | default([]) | length > 0
+          - migration_source_info.Config.Healthcheck.Test[0] != 'NONE'
+          - >-
+            migration_source_info.Config.Env | select('match', '^(HTTP_PORT|UVICORN_PORT)=') |
+            reject('match', '^(HTTP_PORT|UVICORN_PORT)=8000$') | list | length == 0
+          - >-
+            migration_source_info.Config.Env | select('match', '^DATA_PATH=') |
+            reject('match', '^DATA_PATH=(/app/)?data/db.json$') | list | length == 0
+        fail_msg: Source must use the expected data bind mount; running for preflight/stage, stopped for cutover.
+
+    - name: Check destination data without modifying it
+      ansible.builtin.stat:
+        path: "{{ migration_project_dir }}/data"
+      delegate_to: "{{ migration_destination }}"
+      become: true
+      register: migration_destination_data
+
+    - name: Refuse to overwrite a destination instance or previous staging attempt
+      ansible.builtin.assert:
+        that:
+          - migration_inspections.results[1].rc != 0
+          - not migration_destination_data.stat.exists
+        fail_msg: Destination must have no application container or data directory. Inspect failed attempts manually; never overwrite data.
+      when: migration_action != 'cutover'
+
+    - name: Require a healthy staged destination for DNS cutover
+      ansible.builtin.assert:
+        that:
+          - migration_inspections.results[1].rc == 0
+          - (migration_inspections.results[1].stdout | from_json)[0].State.Health.Status == 'healthy'
+          - migration_destination_data.stat.isdir | default(false)
+      when: migration_action == 'cutover'
+
+    - name: Require prepared shared HTTPS routing without replacing VPN configuration
+      ansible.builtin.command:
+        argv: [docker, compose, exec, -T, caddy, caddy, adapt, --config, /etc/caddy/Caddyfile, --adapter, caddyfile]
+        chdir: "{{ migration_caddy_dir }}"
+      delegate_to: "{{ migration_destination }}"
+      become: true
+      changed_when: false
+      register: migration_caddy
+
+    - name: Require the stable hostname and backend in the existing HTTPS router
+      ansible.builtin.assert:
+        that:
+          - migration_domain in migration_caddy.stdout
+          - "('127.0.0.1:' ~ migration_port) in migration_caddy.stdout"
+        fail_msg: Prepare shared Caddy/VPN routing first; this playbook never replaces the node's HTTPS configuration.
+
+    - name: Require no stale IPv6 record before IPv4-only migration
+      ansible.builtin.command:
+        argv:
+          - "{{ ansible_playbook_python }}"
+          - -c
+          - >-
+            import socket,sys;
+            records=socket.getaddrinfo(sys.argv[1],443);
+            assert all(r[0] == socket.AF_INET for r in records), 'Remove AAAA records before migration'
+          - "{{ migration_domain }}"
+      changed_when: false
+
+    - name: Report read-only preflight
+      ansible.builtin.debug:
+        msg: "Preflight passed for {{ migration_source }} -> {{ migration_destination }}; no service, DNS or data changes made."
+      when: migration_action == 'preflight'
+
+    - name: Stage the stopped database and the exact source image
+      ansible.builtin.include_tasks: migration-stage.yml
+      when: migration_action == 'stage'
+
+    - name: Switch only the service DNS record
+      ansible.builtin.include_tasks: migration-cutover.yml
+      when: migration_action == 'cutover'

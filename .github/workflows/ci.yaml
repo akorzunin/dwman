@@ -73,6 +73,17 @@ jobs:
       - run: go test -race ./...
       - run: CGO_ENABLED=0 go build ./cmd/dwman
 
+  tests-migration:
+    name: test offline deployment and migration guards
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install 'ansible-core>=2.19,<2.20' PyYAML
+      - run: python -m unittest discover -s deploy -p 'test_*.py' -v
+
   build_and_push_to_registry:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-22.04
@@ -83,6 +94,7 @@ jobs:
       - checks
       - tests-backend
       - tests-unit-frontend
+      - tests-migration
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4

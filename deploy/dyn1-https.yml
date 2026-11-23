@@ -1,0 +1,5 @@
+---
+# Pass on every dyn1 infrastructure deploy/provision run; keep it with the node's
+# invocation inputs. Paths assume these two repositories remain siblings.
+vpn_node_shared_https: true
+vpn_node_caddyfile: "{{ playbook_dir }}/../../../dwman/deploy/caddy-sites.caddy"

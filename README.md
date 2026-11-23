@@ -2,7 +2,10 @@
 
 Website: <https://dwman.akorz-nt1.duckdns.org/>
 
-Test server: <https://test-dwman.akorz-nt1.duckdns.org/>
+Test server: <https://test-dwman.duckdns.org/> (migrated from ge2 to dyn1 on 2026-11-23).
+
+See [host migrations](deploy/README.md) for database transfer, DNS, Spotify callback,
+HTTPS/VPN coexistence, and the GitHub Actions handoff.
 
 ## How it works
 

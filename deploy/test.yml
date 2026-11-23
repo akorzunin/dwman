@@ -1,0 +1,22 @@
+---
+# Non-secret service identity and the next migration. Inventory remains in infra.
+migration_source: ge2
+migration_destination: dyn1
+migration_domain: test-dwman.duckdns.org
+migration_environment: test
+migration_port: 8088
+migration_project_dir: "/srv/deploy/dwman-{{ migration_environment }}"
+migration_container: "dwman-{{ migration_environment }}"
+migration_infra_dir: "{{ playbook_dir }}/../../ansible-playbooks"
+# Shared Vault source on this controller; the infra-local file lacks DuckDNS.
+# Override this path on controllers with a different shared-input layout.
+migration_external_vars_file: "{{ lookup('env', 'HOME') }}/Dropbox/ssh/external_vars.yml"
+migration_vault_password_file: "{{ migration_infra_dir }}/.ansible_pass"
+migration_backup_dir: "{{ playbook_dir }}/../.local/migrations"
+# Explicit IPv4 only; never let DuckDNS infer the controller's IP.
+migration_destination_ipv4: "{{ hostvars[migration_destination].ansible_host }}"
+migration_caddy_dir: /srv/deploy/caddy
+migration_github_repo: akorzunin/dwman
+# Applied-state pin file, never populated with ssh-keyscan. Change with the target.
+migration_github_known_hosts_file: "{{ migration_infra_dir }}/infra/cherry-vpn/private/known_hosts"
+migration_github_key_file: "{{ hostvars[migration_destination].ansible_ssh_private_key_file | default('') }}"

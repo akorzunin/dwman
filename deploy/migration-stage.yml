@@ -1,0 +1,263 @@
+---
+- name: Create a protected local snapshot directory
+  ansible.builtin.file:
+    path: "{{ migration_backup_dir }}"
+    state: directory
+    mode: "0700"
+
+- name: Allocate temporary controller storage
+  ansible.builtin.tempfile:
+    state: directory
+    prefix: dwman-migration-
+  register: migration_local_tmp
+
+- name: Transfer a consistent snapshot with no second writer
+  block:
+    - name: Stop only the source application
+      ansible.builtin.command:
+        argv: [docker, stop, --time, '30', "{{ migration_container }}"]
+      delegate_to: "{{ migration_source }}"
+      become: true
+      changed_when: true
+
+    - name: Verify that the source has stopped
+      ansible.builtin.command:
+        argv: [docker, inspect, --format, "{{ '{{.State.Running}}' }}", "{{ migration_container }}"]
+      delegate_to: "{{ migration_source }}"
+      become: true
+      changed_when: false
+      register: migration_stopped
+      failed_when: migration_stopped.stdout != 'false'
+
+    - name: Validate source JSON without printing records
+      ansible.builtin.command:
+        argv:
+          - /usr/bin/python3
+          - -c
+          - >-
+            import json,sys;
+            data=json.load(open(sys.argv[1]));
+            assert isinstance(data,dict), 'Database must be an object';
+            assert isinstance(data.get('users',{}),dict), 'Invalid users table'
+          - "{{ migration_project_dir }}/data/db.json"
+      delegate_to: "{{ migration_source }}"
+      become: true
+      changed_when: false
+
+    - name: Allocate temporary source archive
+      ansible.builtin.tempfile:
+        state: file
+        suffix: .tar
+      delegate_to: "{{ migration_source }}"
+      become: true
+      register: migration_remote_tmp
+
+    - name: Archive the complete stopped data directory
+      ansible.builtin.command:
+        argv: [tar, -cpf, "{{ migration_remote_tmp.path }}", -C, "{{ migration_project_dir }}", data]
+      delegate_to: "{{ migration_source }}"
+      become: true
+      changed_when: true
+
+    - name: Hash the source archive
+      ansible.builtin.stat:
+        path: "{{ migration_remote_tmp.path }}"
+        checksum_algorithm: sha256
+      delegate_to: "{{ migration_source }}"
+      become: true
+      register: migration_archive
+
+    - name: Fetch snapshot through the authenticated controller
+      ansible.builtin.fetch:
+        src: "{{ migration_remote_tmp.path }}"
+        dest: "{{ migration_local_tmp.path }}/data.tar"
+        flat: true
+      delegate_to: "{{ migration_source }}"
+      become: true
+      no_log: true
+
+    - name: Retain an encrypted snapshot before starting the destination
+      ansible.builtin.command:
+        argv:
+          - ansible-vault
+          - encrypt
+          - --vault-password-file
+          - "{{ migration_vault_password_file }}"
+          - --output
+          - "{{ migration_backup_dir }}/{{ migration_environment }}-{{ migration_archive.stat.checksum }}.tar.vault"
+          - "{{ migration_local_tmp.path }}/data.tar"
+        creates: "{{ migration_backup_dir }}/{{ migration_environment }}-{{ migration_archive.stat.checksum }}.tar.vault"
+      changed_when: true
+      no_log: true
+
+    - name: Create the destination project directory
+      ansible.builtin.file:
+        path: "{{ migration_project_dir }}"
+        state: directory
+        owner: "{{ hostvars[migration_destination].ansible_user }}"
+        mode: "0755"
+      delegate_to: "{{ migration_destination }}"
+      become: true
+
+    - name: Copy the snapshot to the destination
+      ansible.builtin.copy:
+        src: "{{ migration_local_tmp.path }}/data.tar"
+        dest: "{{ migration_project_dir }}/migration-data.tar"
+        mode: "0600"
+      delegate_to: "{{ migration_destination }}"
+      become: true
+      no_log: true
+
+    - name: Hash the destination archive
+      ansible.builtin.stat:
+        path: "{{ migration_project_dir }}/migration-data.tar"
+        checksum_algorithm: sha256
+      delegate_to: "{{ migration_destination }}"
+      become: true
+      register: migration_transferred
+
+    - name: Verify the transferred archive before extraction
+      ansible.builtin.assert:
+        that: migration_transferred.stat.checksum == migration_archive.stat.checksum
+
+    - name: Restore the full data directory
+      ansible.builtin.unarchive:
+        src: "{{ migration_project_dir }}/migration-data.tar"
+        dest: "{{ migration_project_dir }}"
+        remote_src: true
+      delegate_to: "{{ migration_destination }}"
+      become: true
+      no_log: true
+
+    - name: Verify all restored files against the stopped source archive
+      ansible.builtin.command:
+        argv: [tar, --compare, --file, "{{ migration_project_dir }}/migration-data.tar", --directory, "{{ migration_project_dir }}"]
+      delegate_to: "{{ migration_destination }}"
+      become: true
+      changed_when: false
+      no_log: true
+
+    # Pull the immutable image ID's repository digest, not a mutable test tag.
+    - name: Inspect the source image repository digests
+      ansible.builtin.command:
+        argv: [docker, image, inspect, "{{ migration_source_info.Image }}"]
+      delegate_to: "{{ migration_source }}"
+      become: true
+      changed_when: false
+      register: migration_image
+      no_log: true
+
+    - name: Require a pullable immutable image
+      ansible.builtin.assert:
+        that: (migration_image.stdout | from_json)[0].RepoDigests | length > 0
+        fail_msg: Source image has no registry digest. Publish it before migration; do not combine image upgrades with moves.
+
+    - name: Protect the restored credential directory
+      ansible.builtin.file:
+        path: "{{ migration_project_dir }}/data"
+        state: directory
+        mode: "0700"
+      delegate_to: "{{ migration_destination }}"
+      become: true
+
+    - name: Install the migration Compose definition with the source healthcheck
+      vars:
+        source_health: "{{ migration_source_info.Config.Healthcheck }}"
+        healthcheck:
+          test: "{{ source_health.Test }}"
+          interval: "{{ source_health.Interval | default(30000000000) }}ns"
+          timeout: "{{ source_health.Timeout | default(5000000000) }}ns"
+          retries: "{{ source_health.Retries | default(3) }}"
+          start_period: "{{ source_health.StartPeriod | default(0) }}ns"
+      ansible.builtin.copy:
+        content: >-
+          {{ lookup('ansible.builtin.file', playbook_dir ~ '/migration-compose.yml') | from_yaml |
+             combine({'services': {'dwman': {'healthcheck': healthcheck}}}, recursive=true) | to_nice_yaml }}
+        dest: "{{ migration_project_dir }}/compose.yml"
+        mode: "0644"
+      delegate_to: "{{ migration_destination }}"
+      become: true
+
+    - name: Persist source application settings with the stable service URL
+      ansible.builtin.copy:
+        dest: "{{ migration_project_dir }}/.env"
+        owner: "{{ hostvars[migration_destination].ansible_user }}"
+        mode: "0600"
+        content: |
+          IMAGE_REF={{ (migration_image.stdout | from_json)[0].RepoDigests[0] | to_json }}
+          ENVIRONMENT_NAME={{ migration_environment | to_json }}
+          PORT={{ migration_port | string | to_json }}
+          {% for setting in migration_source_info.Config.Env %}
+          {% set key = setting.split('=', 1)[0] %}
+          {% if key in ['SPOTIPY_CLIENT_ID', 'SPOTIPY_CLIENT_SECRET', 'API_LOGIN', 'API_PASSWORD', 'TG_BOT_TOKEN', 'IGNORE_CORS', 'LOG_LEVEL'] %}
+          {{ key }}={{ setting.split('=', 1)[1] | to_json | replace('$', '$$') }}
+          {% endif %}
+          {% endfor %}
+          SPOTIPY_REDIRECT_URL={{ (migration_url ~ '/get_token') | to_json }}
+          DEPLOY_URL={{ migration_url | to_json }}
+      delegate_to: "{{ migration_destination }}"
+      become: true
+      no_log: true
+
+    - name: Pull and start only the destination application
+      ansible.builtin.command:
+        argv: [docker, compose, up, -d, --pull, always, --wait, --wait-timeout, '120']
+        chdir: "{{ migration_project_dir }}"
+      delegate_to: "{{ migration_destination }}"
+      become: true
+      changed_when: true
+      no_log: true
+
+    - name: Verify destination HTTP health locally
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ migration_port }}/health"
+        use_proxy: false
+      delegate_to: "{{ migration_destination }}"
+
+    - name: Save a non-secret staging receipt
+      ansible.builtin.copy:
+        dest: "{{ migration_project_dir }}/migration.json"
+        mode: "0600"
+        content: >-
+          {{ {'source': migration_source, 'destination': migration_destination,
+              'domain': migration_domain, 'archive_sha256': migration_archive.stat.checksum} | to_nice_json }}
+
+      delegate_to: "{{ migration_destination }}"
+      become: true
+
+    - name: Report staged migration
+      ansible.builtin.debug:
+        msg: >-
+          Destination is healthy; source remains stopped. DNS is UNCHANGED.
+          Encrypted snapshot: {{ migration_backup_dir }}/{{ migration_environment }}-{{ migration_archive.stat.checksum }}.tar.vault.
+          Run cutover next. Do not resume Actions or restart the source.
+  rescue:
+    - name: Fail closed without restarting a potentially stale source
+      ansible.builtin.fail:
+        msg: >-
+          Staging failed. Source may be stopped and destination may have started.
+          Keep CI paused. Inspect both containers and follow deploy/README.md rollback;
+          never restart the source until the destination is stopped and new writes are reconciled.
+  always:
+    - name: Remove controller plaintext snapshot
+      ansible.builtin.file:
+        path: "{{ migration_local_tmp.path }}"
+        state: absent
+      no_log: true
+
+    - name: Remove source temporary archive
+      ansible.builtin.file:
+        path: "{{ migration_remote_tmp.path }}"
+        state: absent
+      delegate_to: "{{ migration_source }}"
+      become: true
+      when: migration_remote_tmp.path is defined
+      no_log: true
+
+    - name: Remove destination temporary archive
+      ansible.builtin.file:
+        path: "{{ migration_project_dir }}/migration-data.tar"
+        state: absent
+      delegate_to: "{{ migration_destination }}"
+      become: true
+      no_log: true

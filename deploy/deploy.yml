@@ -12,7 +12,6 @@
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
         state: directory
-        recurse: true
         mode: "0755"
 
     - name: Copy files for deploy
@@ -21,24 +20,31 @@
         dest: "{{ project_dir }}"
         mode: "0644"
 
+    - name: Persist deployment settings for subsequent Compose operations
+      ansible.builtin.copy:
+        dest: "{{ project_dir }}/.env"
+        mode: "0600"
+        content: |
+          IMAGE_TAG={{ IMAGE_TAG | to_json | replace('$', '$$') }}
+          ENVIRONMENT_NAME={{ ENVIRONMENT_NAME | to_json }}
+          SPOTIPY_CLIENT_ID={{ SPOTIPY_CLIENT_ID | to_json | replace('$', '$$') }}
+          SPOTIPY_CLIENT_SECRET={{ SPOTIPY_CLIENT_SECRET | to_json | replace('$', '$$') }}
+          SPOTIPY_REDIRECT_URL={{ SPOTIPY_REDIRECT_URL | to_json }}
+          API_LOGIN={{ API_LOGIN | to_json | replace('$', '$$') }}
+          API_PASSWORD={{ API_PASSWORD | to_json | replace('$', '$$') }}
+          PORT={{ PORT | string | to_json }}
+          TG_BOT_TOKEN={{ TG_BOT_TOKEN | to_json | replace('$', '$$') }}
+          IGNORE_CORS={{ IGNORE_CORS | default('') | string | to_json }}
+          DEPLOY_URL={{ DEPLOY_URL | to_json }}
+      no_log: true
+
     - name: "Deploy dwman-{{ ENVIRONMENT_NAME }}"
       ansible.builtin.command:
-        cmd: docker compose up -d
+        cmd: docker compose up -d --wait --wait-timeout 120
         chdir: "{{ project_dir }}"
-      environment:
-        IMAGE_TAG: "{{ IMAGE_TAG }}"
-        ENVIRONMENT_NAME: "{{ ENVIRONMENT_NAME }}"
-        SPOTIPY_CLIENT_ID: "{{ SPOTIPY_CLIENT_ID }}"
-        SPOTIPY_CLIENT_SECRET: "{{ SPOTIPY_CLIENT_SECRET }}"
-        SPOTIPY_REDIRECT_URL: "{{ SPOTIPY_REDIRECT_URL }}"
-        API_LOGIN: "{{ API_LOGIN }}"
-        API_PASSWORD: "{{ API_PASSWORD }}"
-        PORT: "{{ PORT }}"
-        TG_BOT_TOKEN: "{{ TG_BOT_TOKEN }}"
-        IGNORE_CORS: "{{ IGNORE_CORS }}"
-        DEPLOY_URL: "{{ DEPLOY_URL }}"
       register: out
-      changed_when: out.rc != 0
+      changed_when: true
+      no_log: true
 
     - name: Remove old version of image
       ansible.builtin.command:
